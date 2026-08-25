@@ -19,9 +19,25 @@ Numbering increases toward the fingertip. Notation is always `<finger><segment>`
 
 The **thumb is the sole contactor.** It carries no zones of its own.
 
-#### Theories
-1. Ring and pinky are hard to reach - exclude? **Important - decide soon**
-2. Ring and pinky distal zones can be useful if we have a *contact surface on the palm* - touch as modifiers (shift/alt/...).
+#### Decided — 2026-08-25, from measurement
+
+Both theories were tested; see [`03-findings-01.md`](03-findings-01.md).
+
+1. **Not distance — landmark ambiguity.** Distal zones were the *fastest* on the hand and were missed zero times in sixty attempts; `P3`, predicted worst, measured tier 1. Error concentrates in the **middle segment**, which is the only zone with no hard edge to stop against, and it worsens outward: `I2` 6.7% → `M2` 13.3% → `R2` 20% → `P2` 26.7%.
+2. **The palm surface is adopted, and the pinky pays for it.** The pinky is workable as a thumb target but not comfortable enough to keep; curling it to the palm is comfortable. Its three zones become the one palm pad of §5.5.
+
+**Layout v1** — the live layout, defined in `src/layout.js`:
+
+|              | proximal (1) | middle (2) | distal (3) |
+| ------------ | ------------ | ---------- | ---------- |
+| **I** index  | `I1`         | `I2`       | `I3`       |
+| **M** middle | `M1`         | `M2`       | `M3`       |
+| **R** ring   | `R1`         | —          | `R3`       |
+| **P** pinky  | — | — | — |
+
+Plus **one palm pad**, closed by curling ring and pinky inward. Eight thumb zones and one pad: nine lines against twelve, and quasimodes restored (§5.5).
+
+The table above the fold remains the v0 sketch, kept because the measurements are indexed against it.
 
 ### 1.2 The single-contactor constraint
 
@@ -56,19 +72,25 @@ Every primitive below is a **classification of this one structure.** There is no
 
 ### 2.1 Primitive classes
 
-| Class                  | Predicate                                             | Count   |
-| ---------------------- | ----------------------------------------------------- | ------- |
-| **Tap**                | `zones.size === 1 && ms < HOLD_MS`                    | 12      |
-| **Hold**               | `zones.size === 1 && ms >= HOLD_MS`                   | 12      |
-| **Longitudinal swipe** | `zones.size >= 2`, all same finger, contiguous        | 8       |
-| **Lateral swipe**      | `zones.size >= 2`, all same segment level, contiguous | 6       |
-| **Chord**              | `zones.size >= 2`, anything else                      | curated |
+Revised 2026-08-25. The zone-set predicates below were replaced by direction-of-intent classification; the implementation is `src/stroke.js` and the reasoning is [`03-findings-01.md §6`](03-findings-01.md).
 
-Direction, where it matters, is `first → last`.
+| Class              | Predicate                                                        | Count (v1) |
+| ------------------ | ---------------------------------------------------------------- | ---------- |
+| **Tap**            | one zone, `ms < HOLD_MS`                                         | 8          |
+| **Hold**           | one zone, `ms >= HOLD_MS`                                        | 8          |
+| **Longitudinal**   | `abs(Δsegment) > abs(Δfinger)`; finger and direction from `first` | 6          |
+| **Lateral**        | `abs(Δfinger) > abs(Δsegment)`; **level from `first`**, direction `first → last` | 6 |
+| **Ambiguous**      | equal deltas — a diagonal, or a bridged chord                     | unassigned |
 
-**Forgiveness rule:** a swipe needs only **two adjacent** zones, not the full run. `I1→I2` and `I1→I2→I3` are the same outward index swipe. This absorbs the single largest source of real-world sloppiness for free.
+**Why direction and not position.** 65 sweeps produced zero direction errors and a steady stream of positional drift — an intended `I2→M2→R2` lands on `R1` about a fifth of the time. Direction is the reliable channel. So:
 
-**v1 inventory: 38 primitives** before any layering. That is already far more than the vocabulary can usefully spend. The scarce resource is not signals — it is *memorable, comfortable, non-colliding* signals.
+- **Extent is discarded.** Two zones and three zones the same way are one command — the forgiveness rule taken to its end.
+- **Level comes from `first`.** The landing is deliberate; the lift is where drift accumulates.
+- **Drift degrades into the intended command, not into the catch-all.** Under the old rule `{I2,M2,R1}` was neither one finger nor one level and fell through to *Chord*. It is now lateral L2 outward. This case is a regression test in `src/stroke.test.mjs`.
+
+**Chords are parked.** With sloppy laterals no longer landing there, "anything else" is not a safe definition, and bridging remains untested.
+
+**v1 inventory: 28 primitives** before layering, against 38 in v0 — signals that could not be produced reliably, traded for ones that can. The scarce resource was never signals; it is *memorable, comfortable, non-colliding* ones.
 
 ### 2.2 Deliberately excluded from v1
 
@@ -82,7 +104,19 @@ Direction, where it matters, is `first → last`.
 
 Signals are not equal in cost. Command frequency should be assigned in **inverse proportion to reach cost**, and the cost ranking should be fixed before any binding is written.
 
-Provisional ranking — **must be re-ordered after physical testing.** It is derived from thumb opposition mechanics, not measurement:
+> **Superseded 2026-08-25.** The ranking below was wrong *in kind*, not merely in order: it prices reach by distance from the thumb, and the measured driver is landmark ambiguity. Kept for the record because the trials are indexed against it. The live model is immediately after.
+>
+> **Measured model.** Cost is set by whether a zone has a hard tactile edge, with finger distance acting as a multiplier on the ambiguity rather than as the cost itself:
+>
+> | | Median | Wrong landings |
+> | --- | --- | --- |
+> | distal — bounded by the fingertip | 790 ms | 0.0% |
+> | proximal — bounded by the knuckle | 843 ms | 3.3% |
+> | middle — bounded by nothing | 885 ms | 16.7% |
+>
+> Absolute times are inflated by an unmeasured reaction-time offset and are ordinal only; see [`03-findings-01.md §1`](03-findings-01.md).
+
+Provisional ranking — **superseded, see above.** It is derived from thumb opposition mechanics, not measurement:
 
 | Tier             | Zones            | Rationale                                                                         |
 | ---------------- | ---------------- | --------------------------------------------------------------------------------- |
@@ -92,15 +126,25 @@ Provisional ranking — **must be re-ordered after physical testing.** It is der
 | **4 — costly**   | `R3`, `P1`, `P2` | Significant thumb travel + finger flexion.                                        |
 | **5 — awkward**  | `P3`             | Worst reach on the hand. Reserve for rare or destructive commands.                |
 
-**Note** - Back to evaluating the need for ring and pinky zones. Decision rules **R1** and **R2** in [`02-reach-trials.md`](02-reach-trials.md) settle this from measurement.
+**Settled.** `R2` dropped (20% wrong landings), pinky reassigned to the palm pad on ergonomic grounds. See §1.1 and [`03-findings-01.md §4`](03-findings-01.md).
 
-**Swipe costs:**
+**Swipe costs — measured.** Cost tracks the number of fingers crossed, and almost nothing else:
 
-- **Lateral at level 1** (`I1→M1→R1→P1`) — the thumb sweeping across the knuckle bases is plausibly the single most natural motion available (ommitting the `P1` - that one's a bit awkward). Spend it on the most frequent action.
-- **Lateral at level 3** requires fingers extended *and* held together — trivial for `I1→M1`, unreliable any further than that, and impossible while gripping anything. Treat as suspect.
-- **Longitudinal** swipes are cheap on index/middle, awkward on pinky.
+| Movement | Median | n |
+| --- | --- | --- |
+| longitudinal (within one finger) | 723 ms | 25 |
+| lateral, one finger across | 773 ms | 10 |
+| lateral, two fingers across | 1044 ms | 10 |
+| lateral, three fingers across | 1080 ms | 20 |
 
-> Everything in this section is the prototype's first real job to falsify. The instrumentation (§7) exists primarily to replace this table with measured data.
+There is a cliff between one finger across and two, and near-nothing between two and three: crossing the first gap is cheap, committing to a wide sweep costs almost its full price up front.
+
+- **The lateral L1 sweep was the most expensive movement tested**, not the cheapest — 1199 ms for `I1→P1` against 715 ms for longitudinal index. The original claim is falsified (rule R3).
+- **Adjacent-finger laterals are the first-class primitive.** Wide sweeps are not; they are slow, uncomfortable, and where the drift lives.
+- **Longitudinal swipes are the cheapest movement on the hand**, led by middle (590 ms).
+- **Lateral at level 3 while gripping is still untested** — no gripping block has been run.
+
+> This section has now been through one round of measurement. What replaced it came from a bare hand and a pen, not from the prototype.
 
 **Correction:** a keyboard-driven prototype cannot falsify this. Reach cost is thumb-opposition mechanics, and four fingers on three keyboard rows is a different physical task that only shares the 4×3 shape. The table is measurable on a bare hand instead — see [`02-reach-trials.md`](02-reach-trials.md) for the protocol, the tool, and the pre-registered rules for what the results do to §1.1 and §7.
 
@@ -125,11 +169,13 @@ Candidate mechanisms, cheapest first:
 
 ## 5. Layers
 
-### 5.1 Quasimodes are unavailable
+### 5.1 Quasimodes are unavailable — *to the thumb*
 
 The intended design (hold a modifier zone, act with the same hand — Raskin's self-revoking quasimode) **does not work with a single contactor.** The thumb cannot hold a modifier and act simultaneously. This rules out the safest known answer to mode error.
 
-### 5.2 Prefix strokes (the v1 answer)
+> **Reopened 2026-08-25.** The constraint binds the *thumb*, and the palm pad of §5.5 is not closed by the thumb — it is closed by curling ring and pinky. Layout v1 adopts it (§1.1), so a true held modifier exists and prefix strokes drop to a fallback. Two consequences: the pad's holdability is completely unvalidated, and because ring and pinky flexion share tendon slips, curling the pinky brings the ring along — **`R1` and `R3` are unreachable while the modifier is held, so the shifted layer is index and middle only, six zones.**
+
+### 5.2 Prefix strokes (the v0 answer, now the fallback)
 
 One stroke arms a layer; the **next stroke executes and the layer auto-reverts.** Emacs `C-x`, vi's `g`, Vim's leader key.
 
@@ -152,6 +198,8 @@ A **single conductive pad on the palm / thenar eminence**, contacted by curling 
 
 That is **one extra zone in exchange for a true held Shift** — restoring quasimodes, and with them the safest available modal design. Highest value-per-gram addition identified so far.
 
+**Adopted in v1, and it costs nothing net.** The pinky measured as workable but uncomfortable as a thumb target, so its three zones were spent on this pad instead: twelve lines become nine, and the quasimode arrives with them. Validation is entirely outstanding — whether the curl can be held for seconds without fatigue, and whether it survives a hand that is already holding something, which is the posture that occupies ring and pinky in the first place.
+
 ---
 
 ## 6. Hardware implication
@@ -161,13 +209,17 @@ Because there is one contactor and order is discarded, the glove need only answe
 
 That is a 12-line scan against a single thumb electrode — no multi-touch matrix, no crosstalk resolution, no per-zone controller. Conductive fabric pads, one trace each, a shared thumb electrode, and any MCU with 12 GPIO or a single mux.
 
-The interaction model chosen here has made the hardware *simpler*, not harder. That is the ordering the project's core principle demands.
+**v1: eight lines plus one.** Measurement removed four zones (`R2`, and the pinky column) and added the palm pad, which is a ninth line on the same shared-electrode scheme — except that it closes against the *ring and pinky tips*, not the thumb, so it needs its own return path. Nine sense lines, two electrodes.
+
+The interaction model chosen here has made the hardware *simpler*, not harder — and the second round of it, driven by measurement rather than by taste, made it simpler again while adding the held modifier §5.1 said was unavailable. That is the ordering the project's core principle demands, and it is now the second time the vocabulary evidence and the hardware simplification have pointed the same way.
 
 ---
 
 ## 7. First binding table
 
 Target: schematic phone (a rectangle with text blocks reporting state). Small on purpose — ten bindings, chosen so the day-one task chain in §8 is completable.
+
+> **Stale as of 2026-08-25.** This table is priced against the superseded §3 costs and against zones that no longer exist (`P1` carries the prefix; `I2→P2` and `P2→I2` are wide L2 sweeps, now the most expensive movement class measured). Rewriting it needs the baseline-corrected re-run, so it is left standing rather than patched — the "not a fan" note below was right, for reasons now known.
 
 ### Base layer
 
@@ -247,5 +299,6 @@ An export button, from the first version.
 - Does the palm pad (§5.5) earn its place? It is the difference between prefix strokes and true quasimodes.
 - Is lateral level 3 performable at all, or does it die the moment the hand is holding something?
 - What is the real reach-cost order? §3 is a hypothesis.
-- Does the forgiveness rule (§2.1) cause collisions between two-zone swipes and intended bridged chords?
+- Does the forgiveness rule (§2.1) cause collisions between two-zone swipes and intended bridged chords? **Sharper now:** extent is fully discarded, so every bridged chord that is not a diagonal is unreachable. Chords are parked (§2.1).
+- Can the palm pad be held comfortably, and while gripping? (§5.5) The trainer cannot answer this — it is a posture, not a thumb target.
 - How is a stroke terminated on real hardware when the thumb never fully lifts — e.g. resting the thumb against the index during normal activity?

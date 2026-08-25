@@ -1,6 +1,12 @@
 # Reach Trials — measuring the cost table
 
-Status: **instrument built, no data yet.** `tools/reach-trials.html` — open it in a browser, no build step, no dependencies, no network.
+Status: **run once, 2026-08-25.** Results and verdicts in [`03-findings-01.md`](03-findings-01.md).
+
+Three things this protocol got wrong, now fixed in the tool:
+
+1. **No baseline block.** Reaction-time overhead swamped the measurement — the whole hand spanned 1.33×, and every zone tiered 1–2. There is now a **baseline mode** (§3), and it must be run first.
+2. **Binary hit/miss.** It recorded zero errors across 65 sweeps that were felt as imprecise, because "arrived, but sloppily" had no key. There is now a third response, <kbd>C</kbd>.
+3. **R1 was written assuming a finger fails uniformly.** It didn't: `P2` failed and `P3` was among the best zones on the hand. Rules that act on a whole finger need per-zone evidence, and comfort — which decided the pinky in the end — was never something these trials measured.
 
 ---
 
@@ -24,7 +30,7 @@ None of this needs hardware, a recognizer, or a binding layer. It needs a stopwa
 
 **Define neutral.** Hand relaxed, thumb resting alongside the index, touching no zone. The thumb returns to neutral between every trial. Without a fixed origin, travel distance varies per trial and the timings mean nothing.
 
-**Non-glove hand on the keyboard.** <kbd>Space</kbd> when the thumb is on target, <kbd>X</kbd> if you landed wrong or had to hunt for the zone.
+**Non-glove hand on the keyboard.** <kbd>Space</kbd> when the thumb lands cleanly, <kbd>C</kbd> if you got there but had to hunt or drifted, <kbd>X</kbd> if you landed on the wrong zone. The middle key matters more than it looks: sweeps almost never land *wrong*, they land *approximately*, and that distinction is what set the grammar (§6 of the findings).
 
 ---
 
@@ -34,6 +40,7 @@ Reach mode, 5 reps × 12 zones = 60 trials, roughly two minutes each:
 
 | # | Hand | Grip | What it answers |
 |---|------|------|-----------------|
+| B | — | — | **Baseline. Run first, every session.** No movement: the target appears, you press. Measures the reaction-plus-keypress overhead so it can be subtracted out. Without it the timings are uninterpretable. |
 | 0 | visible | free | **Warm-up — discard.** |
 | 1 | visible | free | Baseline travel cost, no findability component. |
 | 2 | hidden | free | The real deployment condition. Difference from block 1 isolates *findability* from *travel*. |
@@ -48,6 +55,8 @@ Run blocks in a different order on a second session. A single-session ordering c
 ## 4. What the numbers are and are not
 
 Timing runs from prompt paint to keypress, so every trial carries the same reaction-time and keypress overhead. That is a **constant additive offset**: it inflates absolute milliseconds and compresses ratios, but it does not reorder anything. **The ranking is the result. The absolute values are not.**
+
+The first run showed how badly this bites when the offset is left in: a 1.33× spread across the entire hand, with every zone tiering 1–2. Subtracting a measured baseline is not a refinement, it is what makes the timing column mean anything. The tool now does it, and rejects a baseline sitting at or above the median trial time — the signature of one carried over from another session.
 
 Miss rate is the independent signal, and often the more important one. A zone that is slow but reliable is a different design problem from a zone you cannot find — the first costs time, the second costs a wrong command. The tool flags any target with a miss rate ≥ 20%.
 

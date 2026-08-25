@@ -1,6 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>Gesture Glove — Reach Trials</title>
+<!-- GENERATED FILE. Source: tools/reach-trials.html + src/*.js -->
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
   :root{
@@ -143,10 +144,186 @@
   </div>
 </main>
 
-<script type="module">
-import { LAYOUTS, DEFAULT_LAYOUT, FINGERS, zonesOf, pairsOf, V0_LEGACY_PAIRS, zoneName, hasZone }
-  from "../src/layout.js";
-import { summarise, median, groupBy } from "../src/stats.js";
+<script>
+/* --- inlined from src/ by tools/build-standalone.mjs — edit the modules, not this file --- */
+
+/**
+ * Zone layout — the single source of truth for which contacts exist.
+ *
+ * L0 of the architecture in 00-concept.md §4. The trainer and the interaction
+ * prototype both import this; nothing else may hard-code a zone list.
+ */
+const FINGERS = ["I", "M", "R", "P"];
+const FINGER_NAME = { I: "index", M: "middle", R: "ring", P: "pinky" };
+const SEGMENT_NAME = { 1: "proximal", 2: "middle", 3: "distal" };
+const fingerIndex = z => FINGERS.indexOf(z[0]);
+const segment = z => +z[1];
+const zoneName = z => `${FINGER_NAME[z[0]]} ${SEGMENT_NAME[z[1]]}`;
+
+/**
+ * A layout names its zones and whether a palm pad exists. The palm pad is not
+ * a thumb target: it is closed by curling ring and pinky inward, which makes it
+ * the only contact that can be *held* while the thumb acts elsewhere.
+ */
+const LAYOUTS = {
+  v0: {
+    id: "v0",
+    name: "v0 — 12 zones, three per finger",
+    note: "The original sketch. Measured 2026-08-25; see docs/03-findings-01.md.",
+    segments: { I: [1, 2, 3], M: [1, 2, 3], R: [1, 2, 3], P: [1, 2, 3] },
+    palmPad: false,
+  },
+  v1: {
+    id: "v1",
+    name: "v1 — 8 zones + palm modifier",
+    note: "Middle segments dropped where they proved unfindable; pinky reassigned to the palm pad.",
+    segments: { I: [1, 2, 3], M: [1, 2, 3], R: [1, 3], P: [] },
+    palmPad: true,
+  },
+};
+const DEFAULT_LAYOUT = "v1";
+
+/** Every thumb-reachable zone in a layout, ordered index→pinky, proximal→distal. */
+function zonesOf(layout) {
+  return FINGERS.flatMap(f => (layout.segments[f] || []).map(s => f + s));
+}
+
+/** Does the layout contain this zone? */
+const hasZone = (layout, z) => (layout.segments[z[0]] || []).includes(segment(z));
+
+/**
+ * Transition pairs worth timing, derived from the layout: every within-finger
+ * sweep, and every same-level lateral between adjacent fingers plus the full
+ * span at that level. Both directions throughout.
+ */
+function pairsOf(layout) {
+  const pairs = [];
+  const push = (from, to, note) => pairs.push({ from, to, note });
+
+  for (const f of FINGERS) {
+    const segs = layout.segments[f] || [];
+    if (segs.length >= 2) {
+      const lo = f + segs[0], hi = f + segs[segs.length - 1];
+      push(lo, hi, `longitudinal ${FINGER_NAME[f]}, outward`);
+      push(hi, lo, `longitudinal ${FINGER_NAME[f]}, inward`);
+    }
+  }
+
+  for (const level of [1, 2, 3]) {
+    const present = FINGERS.filter(f => (layout.segments[f] || []).includes(level));
+    for (let i = 0; i + 1 < present.length; i++) {
+      const a = present[i] + level, b = present[i + 1] + level;
+      push(a, b, `lateral L${level}, adjacent, toward pinky`);
+      push(b, a, `lateral L${level}, adjacent, toward index`);
+    }
+    if (present.length > 2) {
+      const a = present[0] + level, b = present[present.length - 1] + level;
+      push(a, b, `lateral L${level}, ${present.length - 1} across, toward pinky`);
+      push(b, a, `lateral L${level}, ${present.length - 1} across, toward index`);
+    }
+  }
+  return pairs;
+}
+
+/**
+ * The v0 block that has already been run once, kept verbatim so a re-run stays
+ * comparable with data/2026-08-25-*. Each pair names the §3 claim it tests.
+ */
+const V0_LEGACY_PAIRS = [
+  { from: "I1", to: "P1", note: "lateral L1 full sweep (claimed cheapest motion available)" },
+  { from: "P1", to: "I1", note: "lateral L1 full sweep, inward" },
+  { from: "I1", to: "M1", note: "lateral L1 short" },
+  { from: "I1", to: "R1", note: "lateral L1 medium" },
+  { from: "I2", to: "P2", note: "lateral L2 full sweep" },
+  { from: "P2", to: "I2", note: "lateral L2 full sweep, inward" },
+  { from: "I3", to: "M3", note: "lateral L3 short (claimed trivial)" },
+  { from: "I3", to: "R3", note: "lateral L3 medium (claimed unreliable)" },
+  { from: "I1", to: "I3", note: "longitudinal index, outward" },
+  { from: "I3", to: "I1", note: "longitudinal index, inward" },
+  { from: "M1", to: "M3", note: "longitudinal middle, outward" },
+  { from: "R1", to: "R3", note: "longitudinal ring" },
+  { from: "P1", to: "P3", note: "longitudinal pinky (claimed awkward)" },
+];
+
+
+/**
+ * Trial statistics, with the correction the first run showed to be necessary.
+ *
+ * Raw trial time is `reach + reaction + keypress`. That overhead is constant
+ * across targets, so it does not reorder anything — but it compresses ratios
+ * badly. The 2026-08-25 run spanned 745–988 ms, a 1.33× spread, of which an
+ * unknown but large majority was overhead. Subtracting a measured baseline
+ * (a block where the target is shown and the key pressed with no movement)
+ * recovers the reach time itself.
+ */
+const median = a => {
+  if (!a.length) return null;
+  const s = [...a].sort((x, y) => x - y), m = s.length >> 1;
+  return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2);
+};
+const quantile = (a, q) => {
+  if (!a.length) return null;
+  const s = [...a].sort((x, y) => x - y);
+  return s[Math.min(s.length - 1, Math.floor(q * s.length))];
+};
+
+/** Trial outcomes. `sloppy` is a hit that needed hunting or correcting. */
+const OUTCOMES = ["clean", "sloppy", "wrong"];
+
+/**
+ * Pool trials by target and summarise. `baseline` (ms) is subtracted from every
+ * median before ratios and tiers are computed; pass null to report raw times.
+ */
+function summarise(trials, { baseline = null, keyOf = t => t.target } = {}) {
+  const by = new Map();
+  for (const t of trials) {
+    const key = keyOf(t);
+    if (!by.has(key)) by.set(key, { key, note: t.note, times: [], n: 0, sloppy: 0, wrong: 0 });
+    const e = by.get(key);
+    e.n++;
+    // A wrong landing has no meaningful reach time; a sloppy one does.
+    if (t.outcome === "wrong" || t.miss === true) e.wrong++;
+    else { e.times.push(t.ms); if (t.outcome === "sloppy") e.sloppy++; }
+  }
+
+  const rows = [...by.values()].map(e => {
+    const raw = median(e.times);
+    return {
+      ...e,
+      raw,
+      median: raw === null ? null : (baseline === null ? raw : Math.max(1, raw - baseline)),
+      p25: quantile(e.times, 0.25),
+      p75: quantile(e.times, 0.75),
+      wrongRate: e.n ? e.wrong / e.n : 0,
+      sloppyRate: e.n ? e.sloppy / e.n : 0,
+      // What the hand actually cares about: anything that was not a clean hit.
+      errorRate: e.n ? (e.wrong + e.sloppy) / e.n : 0,
+    };
+  });
+
+  rows.sort((a, b) => (a.median ?? Infinity) - (b.median ?? Infinity));
+  const best = rows.find(r => r.median !== null)?.median ?? null;
+  for (const r of rows) {
+    r.ratio = best && r.median !== null ? r.median / best : null;
+    r.tier = r.ratio === null ? null
+      : r.ratio <= 1.15 ? 1 : r.ratio <= 1.40 ? 2 : r.ratio <= 1.75 ? 3 : r.ratio <= 2.20 ? 4 : 5;
+  }
+  return { rows, best, baseline };
+}
+
+/** Group trials by whatever dimensions a caller cares about. */
+function groupBy(items, keyFn) {
+  const g = new Map();
+  for (const it of items) {
+    const k = keyFn(it);
+    if (!g.has(k)) g.set(k, []);
+    g.get(k).push(it);
+  }
+  return g;
+}
+
+/* --- end inlined --- */
+
 
 const STORE = "gg.reach.sessions.v2";
 const BASELINE_N = 15;
