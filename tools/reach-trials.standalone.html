@@ -2,6 +2,7 @@
 <meta charset="utf-8">
 <title>Gesture Glove — Reach Trials</title>
 <!-- GENERATED FILE. Source: tools/reach-trials.html + src/*.js -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='88'>%F0%9F%A4%9A</text></svg>">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
   :root{
@@ -336,7 +337,16 @@ function groupBy(items, keyFn) {
   return g;
 }
 
+
+/**
+ * Stamped at deploy time by .github/workflows/pages.yml so that any trial data
+ * exported from the hosted trainer can be traced back to the exact layout and
+ * classifier it was recorded against. Stays "dev" for local runs.
+ */
+const VERSION = { commit: "dev", built: null };
+
 /* --- end inlined --- */
+
 
 
 const STORE = "gg.reach.sessions.v2";
@@ -586,14 +596,17 @@ function download(name, text, type){
   a.download = name; a.click(); URL.revokeObjectURL(a.href);
 }
 $("exportJsonl").onclick = ()=>{
+  // Per-line provenance: exports from different people and different builds
+  // get concatenated, and a stale layout is invisible once that happens.
+  const build = VERSION.commit.slice(0, 7);
   const lines = load().flatMap(s => s.trials.map(t => JSON.stringify({
-    session: s.id, layout: s.layout, mode: s.mode, hand: s.hand, grip: s.grip, ...t
+    session: s.id, build, layout: s.layout, mode: s.mode, hand: s.hand, grip: s.grip, ...t
   })));
   download(`reach-trials-${Date.now()}.jsonl`, lines.join("\n") + "\n", "application/x-ndjson");
 };
 $("exportCsv").onclick = ()=>{
   const b = currentBaseline();
-  const out = [`# baseline_ms=${b ?? "unmeasured"}`,
+  const out = [`# baseline_ms=${b ?? "unmeasured"} build=${VERSION.commit.slice(0,7)}`,
     "layout,mode,hand,grip,target,reach_ms,raw_ms,p25_ms,p75_ms,sloppy_rate,wrong_rate,n,ratio,tier"];
   const groups = groupBy(
     load().filter(s => s.mode !== "baseline").flatMap(s => s.trials.map(t => ({ ...t, s }))),

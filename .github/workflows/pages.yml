@@ -1,0 +1,65 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One deploy at a time, and let an in-flight run finish rather than cancelling it.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Test the classifier
+        run: node --test src/stroke.test.mjs
+
+      # Before stamping anything, confirm the committed standalone build still
+      # matches its sources — otherwise the double-click copy silently drifts.
+      - name: Check the standalone build is current
+        run: |
+          node tools/build-standalone.mjs
+          git diff --exit-code --stat tools/reach-trials.standalone.html \
+            || { echo "::error::tools/reach-trials.standalone.html is stale — run 'node tools/build-standalone.mjs' and commit it"; exit 1; }
+
+      # Stamp the build so trial data exported from the hosted trainer can be
+      # traced back to the exact layout and classifier that produced it.
+      - name: Stamp the build
+        run: |
+          printf 'export const VERSION = { commit: "%s", built: "%s" };\n' \
+            "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > src/version.js
+          node tools/build-standalone.mjs
+
+      - name: Assemble the site
+        run: |
+          mkdir -p _site
+          cp site/index.html _site/
+          cp -r src tools data _site/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -40,14 +40,33 @@ The near-term work is a browser prototype: a simulated glove and a schematic pho
 | [`src/layout.js`](src/layout.js) | Zone layouts (v0, v1) — the single source of truth for which contacts exist |
 | [`src/stroke.js`](src/stroke.js) | L1: stroke classification, one pure function |
 | [`src/stats.js`](src/stats.js) | Trial statistics with baseline correction |
+| [`src/version.js`](src/version.js) | Build stamp, written at deploy time for data provenance |
+| [`site/index.html`](site/index.html) | Landing page — also the onboarding for anyone running trials |
 | [`tools/reach-trials.html`](tools/reach-trials.html) | Reach-trial rig / trainer. Needs a server, since browsers block module imports over `file://` |
-| `tools/reach-trials.standalone.html` | Generated single-file build of the same thing — opens by double-click |
+| `tools/reach-trials.standalone.html` | Generated single-file build of the same thing — opens by double-click, and works offline |
 
 ```sh
 node --test src/stroke.test.mjs      # classifier tests
 node tools/build-standalone.mjs      # regenerate the double-clickable build
 python3 -m http.server                # then open /tools/reach-trials.html
 ```
+
+## Hosting
+
+The site is static and deploys to GitHub Pages from `main` via
+[`.github/workflows/pages.yml`](.github/workflows/pages.yml) — landing page, trainer, modules and
+collected data, with no build step beyond stamping the commit into `src/version.js` so exported
+trial data can be traced to the layout that produced it. The workflow also fails the build if the
+committed standalone copy has drifted from its sources.
+
+**One-time setup:** repository *Settings → Pages → Source → GitHub Actions*. The workflow can also
+be run by hand from the Actions tab against any branch, which is the way to preview a deploy before
+merging.
+
+Nothing here needs a server, a framework or a database. If that changes it will be because data
+submission needs an endpoint — see `docs/` — and the answer then is a single small function, not
+a framework: `src/` is deliberately dependency-free, and a full-stack framework's main effect on
+this repo would be to make that harder to keep true.
 
 ## Principle
 

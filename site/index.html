@@ -1,0 +1,122 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Gesture Glove</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='88'>%F0%9F%A4%9A</text></svg>">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root{
+    --bg:#0e1013; --panel:#161a20; --line:#252b34; --fg:#e6e9ee; --dim:#8b93a1;
+    --accent:#5ac8fa; --warn:#fbbf24; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+       font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}
+  main{max-width:720px;margin:0 auto;padding:56px 24px 80px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.2px}
+  .tagline{color:var(--dim);font-size:17px;margin:0 0 40px}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--dim);
+     margin:44px 0 14px;font-weight:600}
+  a{color:var(--accent)}
+  p{margin:0 0 16px}
+  .cta{display:inline-block;background:var(--accent);color:#06222e;text-decoration:none;
+       border-radius:8px;padding:13px 22px;font-weight:600;margin:6px 0 10px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px;margin:0 0 18px}
+  ol{padding-left:20px;margin:0}
+  ol li{margin-bottom:12px}
+  kbd{font:600 12px/1 var(--mono);background:#0b0d10;border:1px solid var(--line);
+      border-bottom-width:2px;border-radius:4px;padding:3px 6px}
+  code{font:13px/1 var(--mono);background:#0b0d10;border:1px solid var(--line);
+       border-radius:4px;padding:2px 5px}
+  .note{border-left:3px solid var(--warn);background:#1d1a12;padding:12px 16px;
+        border-radius:0 7px 7px 0;font-size:14px;margin:0 0 18px}
+  table{border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px}
+  td,th{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+  td:first-child{white-space:nowrap}
+  footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);
+         color:var(--dim);font-size:13px}
+</style>
+
+<main>
+  <h1>Gesture Glove</h1>
+  <p class="tagline">A small, silent, eyes-free input interface worn on the hand.</p>
+
+  <p>
+    A thin glove. The thumb is the controller; the other fingers carry contact zones on the knuckle
+    creases, all findable by feel. Touching a zone is a signal, sliding across several is a compound one.
+    No screen, no sound, and no gesture anyone else can see.
+  </p>
+  <p>
+    It's a design exploration — there's no hardware yet. The open question is what a silent,
+    private, eyes-free channel is actually <em>good for</em>, and that's answerable long before
+    anything gets soldered.
+  </p>
+
+  <h2>Reach trainer</h2>
+  <p>
+    The tool below measures how quickly and reliably a thumb finds each zone on a bare hand.
+    It's what decided the current layout: it found that the <em>middle</em> segment of each finger
+    is the one you can't reliably locate, because it's the only zone with no hard edge to stop
+    against — and that the fingertip zones, predicted to be the worst, are among the best.
+  </p>
+  <p><a class="cta" href="./tools/reach-trials.html">Open the trainer →</a></p>
+
+  <h2>Running a session</h2>
+  <div class="panel">
+    <ol>
+      <li><b>Mark your hand.</b> One pen dot per finger segment, centred between the creases.
+        The trainer shows the layout. Ink on skin is fine — the creases are the real landmarks.</li>
+      <li><b>Run a baseline block first.</b> It measures your reaction time so it can be subtracted
+        out. Skip it and the timings mean nothing.</li>
+      <li><b>Keep a neutral position.</b> Between trials, hand relaxed, thumb resting alongside the
+        index, touching nothing. Without a fixed starting point the times aren't comparable.</li>
+      <li><b>Answer honestly.</b> <kbd>Space</kbd> for a clean landing, <kbd>C</kbd> if you got there
+        but had to hunt or drifted, <kbd>X</kbd> if you hit the wrong zone. The middle key matters
+        most — sweeps rarely land <em>wrong</em>, they land <em>approximately</em>.</li>
+      <li><b>Hide your hand.</b> Look at the screen, not at your fingers. That's the condition the
+        device actually has to work in.</li>
+    </ol>
+  </div>
+
+  <h2>If you'd like to send results</h2>
+  <div class="note">
+    Everything stays in your browser unless you deliberately export it. Nothing is uploaded,
+    there is no analytics and no tracking.
+  </div>
+  <p>
+    Use the export buttons to download a JSONL or CSV file, then send it along. The data is
+    timings, zone names, and your own hit/sloppy/wrong marks — no personal information.
+  </p>
+  <p>
+    <b>The written impressions are worth more than the numbers.</b> The decision to drop the pinky
+    came from someone saying it worked but didn't feel good — which no timing captured. If something
+    is uncomfortable, imprecise, or awkward in a way the keys can't express, that's the valuable part.
+    Hand size helps too, since it's likely the biggest difference between people.
+  </p>
+
+  <h2>Design notes</h2>
+  <table>
+    <tr><th>Document</th><th>Contents</th></tr>
+    <tr><td><a href="https://github.com/Career200/gesture-glove/blob/main/docs/00-concept.md">00-concept</a></td>
+        <td>Premise, constraints, architecture</td></tr>
+    <tr><td><a href="https://github.com/Career200/gesture-glove/blob/main/docs/01-vocabulary.md">01-vocabulary</a></td>
+        <td>The gesture grammar — primitives, costs, bindings</td></tr>
+    <tr><td><a href="https://github.com/Career200/gesture-glove/blob/main/docs/02-reach-trials.md">02-reach-trials</a></td>
+        <td>Trial protocol and the rules riding on it</td></tr>
+    <tr><td><a href="https://github.com/Career200/gesture-glove/blob/main/docs/03-findings-01.md">03-findings-01</a></td>
+        <td>First results — what they overturned</td></tr>
+  </table>
+
+  <footer>
+    <a href="https://github.com/Career200/gesture-glove">github.com/Career200/gesture-glove</a>
+    · <span id="build">local build</span>
+  </footer>
+</main>
+
+<script type="module">
+  import { VERSION } from "./src/version.js";
+  if (VERSION.commit !== "dev") {
+    document.getElementById("build").textContent =
+      `build ${VERSION.commit.slice(0, 7)}${VERSION.built ? " · " + VERSION.built.slice(0, 10) : ""}`;
+  }
+</script>

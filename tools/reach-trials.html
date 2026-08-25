@@ -1,6 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>Gesture Glove — Reach Trials</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='88'>%F0%9F%A4%9A</text></svg>">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
   :root{
@@ -147,6 +148,7 @@
 import { LAYOUTS, DEFAULT_LAYOUT, FINGERS, zonesOf, pairsOf, V0_LEGACY_PAIRS, zoneName, hasZone }
   from "../src/layout.js";
 import { summarise, median, groupBy } from "../src/stats.js";
+import { VERSION } from "../src/version.js";
 
 const STORE = "gg.reach.sessions.v2";
 const BASELINE_N = 15;
@@ -395,14 +397,17 @@ function download(name, text, type){
   a.download = name; a.click(); URL.revokeObjectURL(a.href);
 }
 $("exportJsonl").onclick = ()=>{
+  // Per-line provenance: exports from different people and different builds
+  // get concatenated, and a stale layout is invisible once that happens.
+  const build = VERSION.commit.slice(0, 7);
   const lines = load().flatMap(s => s.trials.map(t => JSON.stringify({
-    session: s.id, layout: s.layout, mode: s.mode, hand: s.hand, grip: s.grip, ...t
+    session: s.id, build, layout: s.layout, mode: s.mode, hand: s.hand, grip: s.grip, ...t
   })));
   download(`reach-trials-${Date.now()}.jsonl`, lines.join("\n") + "\n", "application/x-ndjson");
 };
 $("exportCsv").onclick = ()=>{
   const b = currentBaseline();
-  const out = [`# baseline_ms=${b ?? "unmeasured"}`,
+  const out = [`# baseline_ms=${b ?? "unmeasured"} build=${VERSION.commit.slice(0,7)}`,
     "layout,mode,hand,grip,target,reach_ms,raw_ms,p25_ms,p75_ms,sloppy_rate,wrong_rate,n,ratio,tier"];
   const groups = groupBy(
     load().filter(s => s.mode !== "baseline").flatMap(s => s.trials.map(t => ({ ...t, s }))),
