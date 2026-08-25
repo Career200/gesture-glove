@@ -24,6 +24,10 @@
   button.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
   kbd{font:600 12px/1 var(--mono);background:#0b0d10;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:3px 6px;color:var(--fg)}
   .hint{color:var(--dim);font-size:13px}
+  #modeHelp{margin-top:14px}
+  #modeHelp ol{margin:9px 0;padding-left:22px}
+  #modeHelp li{margin-bottom:4px}
+  #modeHelp code{font:12px/1 var(--mono);background:#0b0d10;border:1px solid var(--line);border-radius:4px;padding:2px 5px}
   .banner{border-left:3px solid var(--warn);background:#1d1a12;padding:10px 14px;border-radius:0 7px 7px 0;font-size:13px;margin:0 0 16px}
   .banner.ok{border-color:var(--good);background:#111c15}
   #stage{display:none;text-align:center;padding:44px 20px 34px}
@@ -94,26 +98,26 @@
             <option value="transition">Transition — zone-to-zone travel</option>
           </select>
         </div>
-        <div>
+        <div id="fHand">
           <label for="hand">Hand condition</label>
           <select id="hand">
             <option value="hidden">Hand hidden — eyes-free</option>
             <option value="visible">Hand visible</option>
           </select>
         </div>
-        <div>
+        <div id="fGrip">
           <label for="grip">Grip condition</label>
           <select id="grip">
             <option value="free">Free hand</option>
             <option value="gripping">Gripping an object</option>
           </select>
         </div>
-        <div>
+        <div id="fReps">
           <label for="reps">Reps per target</label>
           <input id="reps" type="number" min="1" max="12" value="5">
         </div>
       </div>
-      <p class="hint" id="modeHelp" style="margin-bottom:0"></p>
+      <div class="hint" id="modeHelp"></div>
       <p style="margin:16px 0 0"><button id="start">Start block</button> <span class="hint" id="trialCount"></span></p>
     </div>
 
@@ -157,10 +161,46 @@ const load = () => { try { return JSON.parse(localStorage.getItem(STORE)) || [];
 const save = s => localStorage.setItem(STORE, JSON.stringify(s));
 const layout = () => LAYOUTS[$("layout").value] || LAYOUTS[DEFAULT_LAYOUT];
 
+// `setup` teaches the mode before a block starts; `keys` is the one-line
+// reminder shown under the prompt while it runs.
 const MODE_HELP = {
-  baseline: `Do not move the thumb at all. The target appears, you press <kbd>Space</kbd> as fast as you can from wherever your thumb already is. This measures reaction time plus keypress — the overhead sitting on top of every other trial — so it can be subtracted out. ${BASELINE_N} trials, under a minute.`,
-  reach: `<kbd>Space</kbd> the instant the thumb lands cleanly · <kbd>C</kbd> if you got there but had to hunt or correct · <kbd>X</kbd> if you landed on the wrong zone · <kbd>Esc</kbd> aborts.`,
-  transition: `Place the thumb on the first zone, <kbd>Space</kbd> to begin, then sweep and <kbd>Space</kbd> on arrival · <kbd>C</kbd> if the sweep drifted or felt imprecise · <kbd>X</kbd> if it ended somewhere else entirely.`,
+  baseline: {
+    setup: `<b>Run this once, before anything else.</b> Your thumb does not move in this
+      mode at all — it measures how long you take to <em>see a prompt and press a key</em>,
+      which is the overhead riding on top of every timed trial.
+      <ol>
+        <li>The screen shows <b>wait</b>. Do nothing.</li>
+        <li>After a random delay it flips to <b>NOW</b>.</li>
+        <li>Press <kbd>Space</kbd> as fast as you can.</li>
+      </ol>
+      ${BASELINE_N} trials, under a minute. Every time measured afterwards has this
+      number subtracted from it, which is what leaves the movement on its own.`,
+    keys: `<kbd>Space</kbd> the moment the prompt turns to NOW — the thumb stays still · <kbd>Esc</kbd> aborts`,
+  },
+  reach: {
+    setup: `One zone per trial. The clock runs from the zone appearing to your keypress.
+      <ol>
+        <li><b>neutral</b> — thumb back to rest alongside the index, touching nothing.</li>
+        <li>A zone appears, e.g. <code>M3</code>.</li>
+        <li>Move your thumb onto it.</li>
+        <li>The instant it lands, say how it went.</li>
+      </ol>
+      Returning to neutral every time is what makes the trials comparable — the times are
+      only meaningful if every reach starts from the same place.`,
+    keys: `<kbd>Space</kbd> landed cleanly · <kbd>C</kbd> got there but hunted or corrected · <kbd>X</kbd> landed on the wrong zone · <kbd>Esc</kbd> aborts`,
+  },
+  transition: {
+    setup: `One sweep per trial, timed from the moment you start moving — not from the prompt.
+      <ol>
+        <li><b>neutral</b> — thumb at rest.</li>
+        <li>The starting zone appears. Put your thumb on it; take as long as you like,
+          nothing is being timed yet.</li>
+        <li>Press <kbd>Space</kbd> once you are settled on it. <b>This starts the clock.</b></li>
+        <li>The full sweep appears, e.g. <code>I1 → M1</code>. Sweep, and report on arrival.</li>
+      </ol>
+      Getting into position is deliberately untimed, so what comes out is the travel itself.`,
+    keys: `<kbd>Space</kbd> to start the clock, then <kbd>Space</kbd> on arrival · <kbd>C</kbd> if it drifted or felt imprecise · <kbd>X</kbd> if it ended somewhere else · <kbd>Esc</kbd> aborts`,
+  },
 };
 
 /* ---------- hand diagram ---------- */
@@ -228,7 +268,7 @@ function startBlock(){
   $("setup").style.display = "none";
   $("stage").style.display = "block";
   $("stageDiagram").innerHTML = mode === "baseline" ? "" : handSVG("s", lay);
-  $("keyhint").innerHTML = MODE_HELP[mode];
+  $("keyhint").innerHTML = MODE_HELP[mode].keys;
   $("lastTrial").textContent = "";
   nextTrial();
 }
@@ -241,7 +281,7 @@ function nextTrial(){
   $("target").className = "wait";
   $("target").textContent = session.mode === "baseline" ? "wait" : "neutral";
   $("targetName").textContent = session.mode === "baseline"
-    ? "do not move — press the moment the prompt changes"
+    ? "thumb stays still — press the moment this changes to NOW"
     : "thumb resting alongside the index, touching nothing";
   $("counter").textContent = `${idx+1} / ${seq.length}`;
   $("progressFill").style.width = `${(idx/seq.length)*100}%`;
@@ -261,7 +301,7 @@ function promptSingle(t){
 }
 function promptTransitionStart(t){
   $("target").className = ""; $("target").textContent = t.from;
-  $("targetName").textContent = `place thumb on ${zoneName(t.from)} — Space to begin the sweep`;
+  $("targetName").textContent = `settle the thumb on ${zoneName(t.from)}, then Space to start the clock`;
   paint("s", t.from, null);
   phase = "arm"; awaiting = t;
 }
@@ -330,8 +370,12 @@ function render(){
       ? `<p class="banner">Baseline <b>${b} ms</b> is at or above the median trial time, so the correction is meaningless — it is almost certainly from another session or another keyboard. Delete the baseline blocks below and measure again.</p>`
       : `<p class="banner ok">Baseline <b>${b} ms</b> — subtracted from every median below, so the times shown are reach only.</p>`;
 
-  $("modeHelp").innerHTML = MODE_HELP[$("mode").value];
-  const n = buildSequence($("mode").value, lay, Math.max(1, +$("reps").value || 5)).length;
+  const mode = $("mode").value;
+  // Baseline has no hand/grip condition and a fixed trial count — hide controls
+  // that would do nothing, rather than leaving them to be puzzled over.
+  for (const id of ["fHand", "fGrip", "fReps"]) $(id).hidden = mode === "baseline";
+  $("modeHelp").innerHTML = MODE_HELP[mode].setup;
+  const n = buildSequence(mode, lay, Math.max(1, +$("reps").value || 5)).length;
   $("trialCount").textContent = `${n} trials · about ${Math.max(1, Math.round(n*2.4/60))} min`;
   $("diagram").innerHTML = handSVG("d", lay);
 

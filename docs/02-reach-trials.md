@@ -30,7 +30,9 @@ None of this needs hardware, a recognizer, or a binding layer. It needs a stopwa
 
 **Define neutral.** Hand relaxed, thumb resting alongside the index, touching no zone. The thumb returns to neutral between every trial. Without a fixed origin, travel distance varies per trial and the timings mean nothing.
 
-**Non-glove hand on the keyboard.** <kbd>Space</kbd> when the thumb lands cleanly, <kbd>C</kbd> if you got there but had to hunt or drifted, <kbd>X</kbd> if you landed on the wrong zone. The middle key matters more than it looks: sweeps almost never land *wrong*, they land *approximately*, and that distinction is what set the grammar (§6 of the findings).
+**Non-glove hand on the keyboard.** <kbd>Space</kbd> when the thumb lands cleanly, <kbd>C</kbd> if you got there but had to hunt or drifted, <kbd>X</kbd> if you landed on the wrong zone.
+
+**Where the clock runs.** In a reach trial it runs from the zone appearing to the keypress, so the thumb is travelling under time. In a transition trial getting into the starting position is untimed — a first <kbd>Space</kbd> starts the clock once the thumb is settled, and a second stops it on arrival — so what comes out is the sweep itself rather than the sweep plus its setup. The middle key matters more than it looks: sweeps almost never land *wrong*, they land *approximately*, and that distinction is what set the grammar (§6 of the findings).
 
 ---
 
@@ -40,7 +42,7 @@ Reach mode, 5 reps × 12 zones = 60 trials, roughly two minutes each:
 
 | # | Hand | Grip | What it answers |
 |---|------|------|-----------------|
-| B | — | — | **Baseline. Run first, every session.** No movement: the target appears, you press. Measures the reaction-plus-keypress overhead so it can be subtracted out. Without it the timings are uninterpretable. |
+| B | — | — | **Baseline. Run first, every session.** The thumb does not move: the screen flips from `wait` to `NOW`, you press. Measures reaction plus keypress on its own, so it can be subtracted from the other blocks and leave the movement. Without it the timings are uninterpretable. |
 | 0 | visible | free | **Warm-up — discard.** |
 | 1 | visible | free | Baseline travel cost, no findability component. |
 | 2 | hidden | free | The real deployment condition. Difference from block 1 isolates *findability* from *travel*. |
