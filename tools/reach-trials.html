@@ -1,0 +1,431 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Gesture Glove — Reach Trials</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root{
+    --bg:#0e1013; --panel:#161a20; --line:#252b34; --fg:#e6e9ee; --dim:#8b93a1;
+    --accent:#5ac8fa; --good:#4ade80; --warn:#fbbf24; --bad:#f87171; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;}
+  header{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  h1{font-size:17px;margin:0;font-weight:600;letter-spacing:.2px}
+  header .sub{color:var(--dim);font-size:13px}
+  main{max-width:1080px;margin:0 auto;padding:24px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;margin-bottom:18px}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--dim);margin:0 0 14px;font-weight:600}
+  label{display:block;margin:10px 0 4px;font-size:13px;color:var(--dim)}
+  select,input[type=number]{background:#0b0d10;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;font:inherit;min-width:190px}
+  .row{display:flex;gap:26px;flex-wrap:wrap}
+  button{background:var(--accent);color:#06222e;border:0;border-radius:7px;padding:10px 18px;font:600 14px/1 inherit;cursor:pointer}
+  button.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+  button:disabled{opacity:.4;cursor:default}
+  kbd{font:600 12px/1 var(--mono);background:#0b0d10;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:3px 6px;color:var(--fg)}
+  .hint{color:var(--dim);font-size:13px}
+  /* trial stage */
+  #stage{display:none;text-align:center;padding:44px 20px 34px}
+  #target{font:700 92px/1 var(--mono);letter-spacing:.04em;margin:6px 0 2px}
+  #target.wait{color:var(--dim);font-size:34px;font-weight:600;letter-spacing:0}
+  #targetName{color:var(--dim);font-size:15px;min-height:22px}
+  #progress{height:4px;background:var(--line);border-radius:2px;margin:26px auto 0;max-width:560px;overflow:hidden}
+  #progressFill{height:100%;background:var(--accent);width:0;transition:width .12s linear}
+  #counter{color:var(--dim);font:13px/1 var(--mono);margin-top:10px}
+  #lastTrial{margin-top:16px;font:13px/1 var(--mono);color:var(--dim);min-height:16px}
+  /* hand diagram */
+  svg{display:block;margin:0 auto}
+  .z{fill:#1c222b;stroke:#2b323d;stroke-width:1.5;transition:fill .1s}
+  .z.on{fill:var(--accent);stroke:var(--accent)}
+  .z.from{fill:#2f4a55;stroke:var(--accent)}
+  .zt{fill:#6b7482;font:600 10px var(--mono);text-anchor:middle;dominant-baseline:middle;pointer-events:none}
+  .z.on + .zt,.z.from + .zt{fill:#06222e}
+  .palm{fill:#141922;stroke:#2b323d;stroke-width:1.5}
+  .stub{fill:#141922;stroke:none}
+  /* tables */
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{text-align:right;padding:6px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--dim);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+  th:first-child,td:first-child{text-align:left}
+  td.z{font:600 13px var(--mono);color:var(--fg);background:none;border:0;border-bottom:1px solid var(--line)}
+  .bar{height:8px;background:var(--accent);border-radius:4px;display:inline-block;vertical-align:middle}
+  .flag{color:var(--bad);font-size:12px}
+  .t1{color:var(--good)}.t2{color:#a3e635}.t3{color:var(--warn)}.t4{color:#fb923c}.t5{color:var(--bad)}
+  .sess{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .sess .meta{color:var(--dim);font:12px/1.4 var(--mono)}
+  .tag{display:inline-block;background:#0b0d10;border:1px solid var(--line);border-radius:4px;padding:2px 7px;font:11px/1.5 var(--mono);color:var(--dim);margin-right:5px}
+</style>
+
+<header>
+  <h1>Gesture Glove · Reach Trials</h1>
+  <span class="sub">measures real thumb reach cost across the 12 zones — replaces the guessed table in <code>01-vocabulary.md §3</code></span>
+</header>
+
+<main>
+  <div id="setup">
+    <div class="panel">
+      <h2>Before you start</h2>
+      <p class="hint" style="margin-top:0">
+        Mark the twelve zones on your hand with a pen — one dot per phalanx, centred between the creases (see diagram).
+        Between every trial return the thumb to <b>neutral</b>: hand relaxed, thumb resting alongside the index, touching nothing.
+        Timing is measured from prompt to keypress, so it includes your reaction time as a constant offset — the <i>ranking</i> is what's valid, not the absolute milliseconds.
+      </p>
+      <div id="diagram"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Block setup</h2>
+      <div class="row">
+        <div>
+          <label for="mode">Mode</label>
+          <select id="mode">
+            <option value="reach">Reach — single zone targets (12 zones)</option>
+            <option value="transition">Transition — zone-to-zone travel (swipes)</option>
+          </select>
+        </div>
+        <div>
+          <label for="hand">Hand condition</label>
+          <select id="hand">
+            <option value="visible">Hand visible</option>
+            <option value="hidden">Hand hidden — eyes-free</option>
+          </select>
+        </div>
+        <div>
+          <label for="grip">Grip condition</label>
+          <select id="grip">
+            <option value="free">Free hand</option>
+            <option value="gripping">Gripping an object (mug / phone / strap)</option>
+          </select>
+        </div>
+        <div>
+          <label for="reps">Reps per target</label>
+          <input id="reps" type="number" min="1" max="12" value="5">
+        </div>
+      </div>
+      <p class="hint" style="margin-bottom:0">
+        <kbd>Space</kbd> the instant the thumb is on target · <kbd>X</kbd> if you landed on the wrong zone or had to hunt · <kbd>Esc</kbd> aborts the block.
+      </p>
+      <p style="margin:16px 0 0"><button id="start">Start block</button> <span class="hint" id="trialCount"></span></p>
+    </div>
+
+    <div class="panel" id="sessionsPanel" hidden>
+      <h2>Recorded blocks</h2>
+      <div id="sessions"></div>
+      <p style="margin:16px 0 0;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="ghost" id="exportJsonl">Export JSONL (raw trials)</button>
+        <button class="ghost" id="exportCsv">Export CSV (per-zone summary)</button>
+        <button class="ghost" id="clear">Clear all</button>
+      </p>
+    </div>
+
+    <div class="panel" id="resultsPanel" hidden>
+      <h2>Results</h2>
+      <div id="results"></div>
+    </div>
+  </div>
+
+  <div id="stage" class="panel">
+    <div id="target" class="wait">ready</div>
+    <div id="targetName"></div>
+    <div id="stageDiagram" style="margin-top:20px"></div>
+    <div id="progress"><div id="progressFill"></div></div>
+    <div id="counter"></div>
+    <div id="lastTrial"></div>
+  </div>
+</main>
+
+<script>
+"use strict";
+
+const ZONES = ["I1","I2","I3","M1","M2","M3","R1","R2","R3","P1","P2","P3"];
+const FINGER = { I:"index", M:"middle", R:"ring", P:"pinky" };
+const SEGMENT = { 1:"proximal", 2:"middle", 3:"distal" };
+const zoneName = z => `${FINGER[z[0]]} ${SEGMENT[z[1]]}`;
+
+// Curated transition pairs — each one tests a specific claim in 01-vocabulary.md §3.
+const PAIRS = [
+  ["I1","P1","lateral L1 full sweep (claimed cheapest motion available)"],
+  ["P1","I1","lateral L1 full sweep, inward"],
+  ["I1","M1","lateral L1 short"],
+  ["I1","R1","lateral L1 medium"],
+  ["I2","P2","lateral L2 full sweep"],
+  ["P2","I2","lateral L2 full sweep, inward"],
+  ["I3","M3","lateral L3 short (claimed trivial)"],
+  ["I3","R3","lateral L3 medium (claimed unreliable)"],
+  ["I1","I3","longitudinal index, outward"],
+  ["I3","I1","longitudinal index, inward"],
+  ["M1","M3","longitudinal middle, outward"],
+  ["R1","R3","longitudinal ring"],
+  ["P1","P3","longitudinal pinky (claimed awkward)"],
+];
+
+const STORE = "gg.reach.sessions.v1";
+const $ = id => document.getElementById(id);
+const load = () => { try { return JSON.parse(localStorage.getItem(STORE)) || []; } catch { return []; } };
+const save = s => localStorage.setItem(STORE, JSON.stringify(s));
+
+/* ---------- hand diagram ---------- */
+function handSVG(idPrefix){
+  // Four finger columns rising from a palm. Bases follow the knuckle arc
+  // (middle highest, pinky lowest) so relative finger length reads correctly.
+  const cols = ["I","M","R","P"], base = [182,170,176,192];
+  const X0 = 60, DX = 52, W = 46, H = 46, GAP = 6;
+  let s = `<svg viewBox="0 0 330 268" width="330" height="268" aria-hidden="true">`;
+  s += `<path class="palm" d="M52 196 q-26 4 -32 30 q-4 26 20 30 q22 4 32 -18 z"/>`;   // thumb
+  s += `<text class="zt" x="34" y="230" style="font-size:9px">thumb</text>`;
+  s += `<rect class="palm" x="52" y="198" width="218" height="60" rx="16"/>`;           // palm
+  cols.forEach((f,ci)=>{
+    const x = X0 + ci*DX;
+    s += `<rect class="stub" x="${x}" y="${base[ci]}" width="${W}" height="${214-base[ci]}" rx="7"/>`;
+    for(let seg=1; seg<=3; seg++){
+      const z = f+seg, y = base[ci] - seg*(H+GAP);
+      s += `<rect class="z" id="${idPrefix}-${z}" x="${x}" y="${y}" width="${W}" height="${H}" rx="9"/>`;
+      s += `<text class="zt" x="${x+W/2}" y="${y+H/2+1}">${z}</text>`;
+    }
+  });
+  return s + `</svg>`;
+}
+function paint(prefix, on, from){
+  ZONES.forEach(z=>{
+    const el = $(`${prefix}-${z}`); if(!el) return;
+    el.classList.toggle("on", z === on);
+    el.classList.toggle("from", z === from);
+  });
+}
+
+/* ---------- trial sequence ---------- */
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function buildSequence(mode, reps){
+  const seq = [];
+  for(let r=0;r<reps;r++){
+    const block = mode === "reach"
+      ? ZONES.map(z => ({ target:z }))
+      : PAIRS.map(([from,to,note]) => ({ from, to, note }));
+    // shuffle within each rep so every target appears exactly `reps` times, order balanced
+    shuffle(block).forEach(t => seq.push(t));
+  }
+  return seq;
+}
+
+/* ---------- statistics ---------- */
+const median = a => { if(!a.length) return null; const s=[...a].sort((x,y)=>x-y), m=s.length>>1;
+  return s.length%2 ? s[m] : Math.round((s[m-1]+s[m])/2); };
+const quantile = (a,q) => { if(!a.length) return null; const s=[...a].sort((x,y)=>x-y);
+  return s[Math.min(s.length-1, Math.floor(q*s.length))]; };
+
+function summarise(session){
+  const by = new Map();
+  session.trials.forEach(t=>{
+    const key = session.mode === "reach" ? t.target : `${t.from}→${t.to}`;
+    if(!by.has(key)) by.set(key, { key, hits:[], misses:0, n:0, note:t.note });
+    const e = by.get(key); e.n++;
+    if(t.miss) e.misses++; else e.hits.push(t.ms);
+  });
+  const rows = [...by.values()].map(e=>({
+    ...e,
+    median: median(e.hits), p25: quantile(e.hits,.25), p75: quantile(e.hits,.75),
+    missRate: e.n ? e.misses/e.n : 0,
+  })).filter(r => r.median !== null || r.n);
+  rows.sort((a,b)=>(a.median ?? 1e9)-(b.median ?? 1e9));
+  const best = rows.find(r=>r.median!==null)?.median ?? null;
+  rows.forEach(r=>{
+    r.ratio = (best && r.median!==null) ? r.median/best : null;
+    r.tier = r.ratio===null ? null
+      : r.ratio<=1.15 ? 1 : r.ratio<=1.40 ? 2 : r.ratio<=1.75 ? 3 : r.ratio<=2.20 ? 4 : 5;
+  });
+  return { rows, best };
+}
+
+/* ---------- run state ---------- */
+let session = null, seq = [], idx = 0, t0 = 0, awaiting = null, gapTimer = null, phase = null;
+
+function startBlock(){
+  const mode = $("mode").value, reps = Math.max(1, Math.min(12, +$("reps").value || 5));
+  session = {
+    id: Date.now(), mode, reps,
+    hand: $("hand").value, grip: $("grip").value,
+    startedAt: new Date().toISOString(), trials: [],
+  };
+  seq = buildSequence(mode, reps); idx = 0;
+  $("setup").style.display = "none";
+  $("stage").style.display = "block";
+  $("stageDiagram").innerHTML = handSVG("s");
+  $("lastTrial").textContent = "";
+  nextTrial();
+}
+
+function nextTrial(){
+  if(idx >= seq.length) return finishBlock();
+  const t = seq[idx];
+  awaiting = null; phase = null;
+  paint("s", null, null);
+  $("target").className = "wait";
+  $("target").textContent = "neutral";
+  $("targetName").textContent = "thumb resting alongside the index, touching nothing";
+  $("counter").textContent = `${idx+1} / ${seq.length}`;
+  $("progressFill").style.width = `${(idx/seq.length)*100}%`;
+  // random gap defeats anticipation
+  clearTimeout(gapTimer);
+  gapTimer = setTimeout(()=> session.mode === "reach" ? promptReach(t) : promptTransitionStart(t), 450 + Math.random()*550);
+}
+
+function promptReach(t){
+  $("target").className = ""; $("target").textContent = t.target;
+  $("targetName").textContent = zoneName(t.target);
+  paint("s", t.target, null);
+  phase = "go"; awaiting = t;
+  requestAnimationFrame(()=> requestAnimationFrame(()=> { t0 = performance.now(); }));
+}
+
+function promptTransitionStart(t){
+  $("target").className = ""; $("target").textContent = t.from;
+  $("targetName").textContent = `place thumb on ${zoneName(t.from)} — then press Space to begin the sweep`;
+  paint("s", t.from, null);
+  phase = "arm"; awaiting = t;
+}
+
+function promptTransitionGo(t){
+  $("target").textContent = `${t.from} → ${t.to}`;
+  $("targetName").textContent = t.note || "";
+  paint("s", t.to, t.from);
+  phase = "go";
+  requestAnimationFrame(()=> requestAnimationFrame(()=> { t0 = performance.now(); }));
+}
+
+function record(miss){
+  const t = awaiting, ms = Math.round(performance.now() - t0);
+  const row = session.mode === "reach"
+    ? { i: idx, target: t.target, ms, miss, t: Date.now() }
+    : { i: idx, from: t.from, to: t.to, note: t.note, ms, miss, t: Date.now() };
+  session.trials.push(row);
+  const label = session.mode === "reach" ? t.target : `${t.from}→${t.to}`;
+  $("lastTrial").innerHTML = miss
+    ? `<span style="color:var(--bad)">miss</span> · ${label}`
+    : `${label} · ${ms} ms`;
+  idx++; nextTrial();
+}
+
+function finishBlock(){
+  clearTimeout(gapTimer);
+  $("progressFill").style.width = "100%";
+  if(session && session.trials.length){
+    const all = load(); all.push(session); save(all);
+  }
+  session = null; awaiting = null; phase = null;
+  $("stage").style.display = "none";
+  $("setup").style.display = "block";
+  render();
+}
+
+document.addEventListener("keydown", e=>{
+  if($("stage").style.display !== "block") {
+    if(e.key === "Enter" && document.activeElement?.tagName !== "BUTTON"){ e.preventDefault(); startBlock(); }
+    return;
+  }
+  if(e.key === "Escape"){ e.preventDefault(); clearTimeout(gapTimer); finishBlock(); return; }
+  if(!awaiting || !phase) return;
+  if(e.code === "Space"){
+    e.preventDefault();
+    if(phase === "arm") promptTransitionGo(awaiting); else record(false);
+  } else if(e.key === "x" || e.key === "X"){
+    e.preventDefault();
+    if(phase === "go") record(true);
+  }
+});
+
+/* ---------- rendering ---------- */
+function condTags(s){
+  return `<span class="tag">${s.mode}</span><span class="tag">${s.hand}</span><span class="tag">${s.grip}</span><span class="tag">${s.reps}×</span>`;
+}
+
+function render(){
+  const all = load();
+  $("trialCount").textContent = (()=> {
+    const n = ($("mode").value === "reach" ? ZONES.length : PAIRS.length) * (+$("reps").value || 5);
+    return `${n} trials · about ${Math.max(1, Math.round(n*2.2/60))} min`;
+  })();
+
+  $("sessionsPanel").hidden = !all.length;
+  $("resultsPanel").hidden = !all.length;
+  if(!all.length) return;
+
+  $("sessions").innerHTML = all.slice().reverse().map(s=>`
+    <div class="sess">
+      <div>${condTags(s)}<span class="meta">${s.trials.length} trials · ${new Date(s.startedAt).toLocaleString()}</span></div>
+      <button class="ghost" data-del="${s.id}" style="padding:5px 11px;font-size:12px">delete</button>
+    </div>`).join("");
+  $("sessions").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{
+    save(load().filter(s=>s.id !== +b.dataset.del)); render();
+  });
+
+  // one results table per (mode, hand, grip) condition, pooling repeated blocks
+  const groups = new Map();
+  all.forEach(s=>{
+    const k = `${s.mode}|${s.hand}|${s.grip}`;
+    if(!groups.has(k)) groups.set(k, { mode:s.mode, hand:s.hand, grip:s.grip, trials:[] });
+    groups.get(k).trials.push(...s.trials);
+  });
+
+  $("results").innerHTML = [...groups.values()].map(g=>{
+    const { rows, best } = summarise(g);
+    const max = Math.max(...rows.map(r=>r.median ?? 0), 1);
+    const head = g.mode === "reach" ? "Zone" : "Transition";
+    return `
+      <div style="margin-bottom:26px">
+        <div style="margin-bottom:10px">${condTags({...g, reps:Math.round(g.trials.length/(g.mode==="reach"?12:PAIRS.length))})}</div>
+        <table>
+          <thead><tr>
+            <th>${head}</th><th>Median</th><th>IQR</th><th>vs best</th><th>Miss</th><th>n</th><th>Tier</th><th style="width:34%"></th>
+          </tr></thead>
+          <tbody>${rows.map(r=>`
+            <tr>
+              <td class="z">${r.key}${r.missRate>=0.2?' <span class="flag">⚑</span>':''}</td>
+              <td>${r.median ?? "—"}</td>
+              <td style="color:var(--dim)">${r.p25 ?? "—"}–${r.p75 ?? "—"}</td>
+              <td>${r.ratio ? r.ratio.toFixed(2)+"×" : "—"}</td>
+              <td class="${r.missRate>=0.2?'flag':''}">${Math.round(r.missRate*100)}%</td>
+              <td style="color:var(--dim)">${r.n}</td>
+              <td class="t${r.tier}">${r.tier ?? "—"}</td>
+              <td><span class="bar" style="width:${Math.round(((r.median??0)/max)*100)}%"></span></td>
+            </tr>`).join("")}</tbody>
+        </table>
+      </div>`;
+  }).join("") + `
+    <p class="hint" style="margin:0">
+      Tiers are assigned by median ratio to the fastest target (≤1.15× → 1, ≤1.40× → 2, ≤1.75× → 3, ≤2.20× → 4, above → 5),
+      matching the five-tier shape of <code>§3</code>. <span class="flag">⚑</span> marks a miss rate ≥ 20% — a zone that is slow but reliable
+      is a different problem from one you cannot find.
+    </p>`;
+}
+
+/* ---------- export ---------- */
+function download(name, text, type){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], {type}));
+  a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+$("exportJsonl").onclick = ()=>{
+  const lines = load().flatMap(s => s.trials.map(t => JSON.stringify({
+    session: s.id, mode: s.mode, hand: s.hand, grip: s.grip, ...t
+  })));
+  download(`reach-trials-${Date.now()}.jsonl`, lines.join("\n") + "\n", "application/x-ndjson");
+};
+$("exportCsv").onclick = ()=>{
+  const out = ["mode,hand,grip,target,median_ms,p25_ms,p75_ms,miss_rate,n,ratio,tier"];
+  const groups = new Map();
+  load().forEach(s=>{
+    const k = `${s.mode}|${s.hand}|${s.grip}`;
+    if(!groups.has(k)) groups.set(k, { mode:s.mode, hand:s.hand, grip:s.grip, trials:[] });
+    groups.get(k).trials.push(...s.trials);
+  });
+  groups.forEach(g => summarise(g).rows.forEach(r => out.push(
+    [g.mode,g.hand,g.grip,r.key,r.median??"",r.p25??"",r.p75??"",r.missRate.toFixed(3),r.n,r.ratio?r.ratio.toFixed(3):"",r.tier??""].join(",")
+  )));
+  download(`reach-summary-${Date.now()}.csv`, out.join("\n") + "\n", "text/csv");
+};
+$("clear").onclick = ()=>{ if(confirm("Delete all recorded blocks?")){ save([]); render(); } };
+
+$("start").onclick = startBlock;
+["mode","reps"].forEach(id => $(id).addEventListener("input", render));
+$("diagram").innerHTML = handSVG("d");
+render();
+</script>

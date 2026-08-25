@@ -92,7 +92,7 @@ Provisional ranking — **must be re-ordered after physical testing.** It is der
 | **4 — costly**   | `R3`, `P1`, `P2` | Significant thumb travel + finger flexion.                                        |
 | **5 — awkward**  | `P3`             | Worst reach on the hand. Reserve for rare or destructive commands.                |
 
-**Note** - Back to evaluating the need for ring and pinky zones.
+**Note** - Back to evaluating the need for ring and pinky zones. Decision rules **R1** and **R2** in [`02-reach-trials.md`](02-reach-trials.md) settle this from measurement.
 
 **Swipe costs:**
 
@@ -101,6 +101,8 @@ Provisional ranking — **must be re-ordered after physical testing.** It is der
 - **Longitudinal** swipes are cheap on index/middle, awkward on pinky.
 
 > Everything in this section is the prototype's first real job to falsify. The instrumentation (§7) exists primarily to replace this table with measured data.
+
+**Correction:** a keyboard-driven prototype cannot falsify this. Reach cost is thumb-opposition mechanics, and four fingers on three keyboard rows is a different physical task that only shares the 4×3 shape. The table is measurable on a bare hand instead — see [`02-reach-trials.md`](02-reach-trials.md) for the protocol, the tool, and the pre-registered rules for what the results do to §1.1 and §7.
 
 ---
 

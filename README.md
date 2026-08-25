@@ -20,12 +20,21 @@ Design and simulation. **No hardware, no validated interaction model, no code ye
 
 The near-term work is a browser prototype: a simulated glove and a schematic phone, driven by mouse and by keyboard, used to find out what the gesture grammar should be before anything is soldered.
 
+Ahead of it, one thing is measurable on a bare hand today. The reach-cost table the whole vocabulary is priced against is currently a guess, and no keyboard-driven prototype can falsify it — reach cost is a property of a thumb crossing a palm. [`tools/reach-trials.html`](tools/reach-trials.html) measures it with a pen and twenty minutes.
+
 ## Docs
 
 |                                                  |                                                         |
 | ------------------------------------------------ | ------------------------------------------------------- |
 | [`docs/00-concept.md`](docs/00-concept.md)       | Premise, constraints, architecture, roadmap             |
 | [`docs/01-vocabulary.md`](docs/01-vocabulary.md) | The gesture grammar — primitives, reach costs, bindings |
+| [`docs/02-reach-trials.md`](docs/02-reach-trials.md) | Protocol for measuring the real reach costs, and the decision rules riding on them |
+
+## Tools
+
+| | |
+| --- | --- |
+| [`tools/reach-trials.html`](tools/reach-trials.html) | Reach-trial rig. Open in any browser — no build, no dependencies, no network. Exports JSONL and CSV. |
 
 ## Principle
 
