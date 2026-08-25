@@ -58,3 +58,56 @@ test("a true diagonal is reported ambiguous rather than guessed", () => {
 test("empty stroke is inert", () => {
   assert.equal(classify(s([])).kind, "empty");
 });
+
+/* --- reachability under the palm-pad modifier (measured by hand 2026-08-25) --- */
+import { performable } from "./stroke.js";
+import { LAYOUTS } from "./layout.js";
+
+const v1 = LAYOUTS.v1;
+const held = { modifierHeld: true };
+
+test("v1 excludes the pinky and the ring middle segment as thumb targets", () => {
+  assert.equal(performable(classify(s(["P1"], 100)), v1), false);
+  assert.equal(performable(classify(s(["R2"], 100)), v1), false);
+  assert.equal(performable(classify(s(["R1"], 100)), v1), true);
+});
+
+test("holding the palm pad leaves the ring landable", () => {
+  assert.equal(performable(classify(s(["R1"], 100)), v1, held), true);
+  assert.equal(performable(classify(s(["R3"], 500)), v1, held), true, "holds too");
+});
+
+test("holding the palm pad costs the ring its sweeps", () => {
+  const ringSweep = classify(s(["R1", "R3"]));
+  assert.equal(performable(ringSweep, v1), true, "available in the base state");
+  assert.equal(performable(ringSweep, v1, held), false, "gone while the pad is held");
+});
+
+test("index and middle keep everything while the pad is held", () => {
+  assert.equal(performable(classify(s(["I1", "I3"])), v1, held), true);
+  assert.equal(performable(classify(s(["I1", "M1"])), v1, held), true);
+  assert.equal(performable(classify(s(["I3", "M3"])), v1, held), true);
+});
+
+test("discarding extent is what saves the laterals under the modifier", () => {
+  // An M1→R1 sweep is unperformable with the ring curled, but extent is not
+  // part of the command: the same class is produced by I1→M1, which is. So no
+  // lateral is lost to the modifier — only the ring's longitudinal pair is.
+  const lateral = classify(s(["M1", "R1"]));
+  assert.equal(lateral.kind, "lateral");
+  assert.equal(performable(lateral, v1), true);
+  assert.equal(performable(lateral, v1, held), true);
+  assert.equal(notate(lateral), notate(classify(s(["I1", "M1"]))), "same command, reachable span");
+});
+
+test("the modifier costs exactly the ring's two longitudinal strokes", () => {
+  const all = [
+    ...["I1","I2","I3","M1","M2","M3","R1","R3"].flatMap(z => [s([z],100), s([z],500)]),
+    s(["I1","I3"]), s(["I3","I1"]), s(["M1","M3"]), s(["M3","M1"]), s(["R1","R3"]), s(["R3","R1"]),
+    s(["I1","M1"]), s(["M1","I1"]), s(["I2","M2"]), s(["M2","I2"]), s(["I3","M3"]), s(["M3","I3"]),
+  ].map(x => classify(x));
+  const base = all.filter(c => performable(c, v1)).length;
+  const shifted = all.filter(c => performable(c, v1, held)).length;
+  assert.equal(base, 28, "v1 base inventory");
+  assert.equal(base - shifted, 2, "only R longitudinal in/out is lost");
+});

@@ -115,9 +115,15 @@ The chord class is **parked**, not kept: with sloppy laterals no longer landing 
 
 This is the §7-of-`00-concept` test passing on its own terms: the vocabulary evidence and the hardware simplification point the same way.
 
-Primitive count for v1: 8 taps + 8 holds + 6 longitudinal (I/M/R × 2) + 6 lateral (L1/L2/L3 × 2) = **28 before layering**, against 38 in v0 — a small loss of unusable signals in exchange for reliable ones, roughly doubled again by the modifier.
+Primitive count for v1: 8 taps + 8 holds + 6 longitudinal (I/M/R × 2) + 6 lateral (L1/L2/L3 × 2) = **28 before layering**, against 38 in v0 — a small loss of unusable signals in exchange for reliable ones. The modifier adds 26 more, for 54.
 
-**The constraint that comes with it:** ring and pinky flexion share tendon slips, so curling the pinky to the palm brings the ring along. `R1` and `R3` are therefore unreachable while the modifier is held, and the shifted layer is index and middle only. Design the shifted layer for six zones, not eight.
+**The constraint that comes with it** — tested by hand after this was first written, and milder than predicted. Ring and pinky flexion share tendon slips, so curling the pinky to the palm does bring the ring along, but not far enough to bury it: with `P3` on the palm the ring stays **landable and stops being slidable**. The thumb can still reach `R1` and `R3` to tap or hold; it cannot slide along them.
+
+So the modifier does not shrink the zone set. It removes one primitive class from one finger, and contact and travel have to be modelled separately to say so — a single "available zones" list cannot express it (`whileHeld` in `src/layout.js`, `performable()` in `src/stroke.js`).
+
+**And discarding extent (§6) turns out to pay for itself here.** A lateral L1 is normally available as `I1→M1→R1`; with the ring curled that span is gone. But extent is not part of the command, so the same lateral is produced by `I1→M1`, which is entirely reachable. Every lateral survives the modifier. The shifted inventory is therefore **26 of the 28 base primitives — the ring's two longitudinal strokes, and nothing else.** That arithmetic is a test, not an estimate.
+
+The design consequence is small but real: two strokes mean nothing while the pad is held, so the safest shifted bindings live on the index and middle core, which behaves identically in both states.
 
 ---
 
@@ -125,6 +131,6 @@ Primitive count for v1: 8 taps + 8 holds + 6 longitudinal (I/M/R × 2) + 6 later
 
 - **Everything timed needs re-running with a baseline.** The ordinal findings stand; the magnitudes do not.
 - **The gripping condition was never run** — R4 is untested, and grip is the condition §3 expected to be decisive.
-- **The palm pad is unvalidated in every respect.** Can the curl be held for seconds without fatigue? Does it survive a hand that is holding something — the very posture that occupies ring and pinky? Can it be closed without the thumb moving? This is a posture, not a thumb target, so the current trainer cannot test it; it needs a hold-and-act trial mode.
+- **The palm pad is validated in one respect only.** What the curl leaves reachable is now known (§7). Still open: can it be held for seconds without fatigue, can it be closed without the thumb moving, and does it survive a hand that is already holding something — the very posture that occupies ring and pinky. This is a posture, not a thumb target, so the current trainer cannot test it; it needs a hold-and-act trial mode.
 - **`M2` is the weakest survivor** at 13.3% wrong. It stays for now, but if the modifier layer needs index and middle to be watertight, it is the first thing to drop.
 - **n = 1, one hand, unblinded.** Enough to kill a bad zone. Not enough to fix a tier ordering.

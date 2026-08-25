@@ -32,6 +32,20 @@ export const LAYOUTS = {
     note: "Middle segments dropped where they proved unfindable; pinky reassigned to the palm pad.",
     segments: { I: [1, 2, 3], M: [1, 2, 3], R: [1, 3], P: [] },
     palmPad: true,
+    /**
+     * What survives while the palm pad is held, measured by hand 2026-08-25.
+     *
+     * Curling the pinky to the pad brings the ring with it, but not far enough
+     * to bury it: the ring stays *landable* and stops being *slidable*. So the
+     * modifier does not shrink the zone set — it removes a primitive class from
+     * one finger. Contact and travel have to be modelled separately because of
+     * this; a single "available zones" list cannot express it.
+     */
+    whileHeld: {
+      name: "palm pad held (ring and pinky curled)",
+      contact: ["I1", "I2", "I3", "M1", "M2", "M3", "R1", "R3"],
+      sweepFingers: ["I", "M"],
+    },
   },
 };
 

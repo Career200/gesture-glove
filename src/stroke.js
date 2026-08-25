@@ -7,7 +7,7 @@
  * @typedef {{ zones: string[], first: string, last: string, ms: number }} Stroke
  */
 
-import { fingerIndex, segment } from "./layout.js";
+import { fingerIndex, segment, hasZone, FINGERS } from "./layout.js";
 
 export const HOLD_MS = 350;
 
@@ -78,4 +78,36 @@ export function notate(c) {
 /** Build a Stroke from an ordered contact log — the shape L0 emits. */
 export function strokeFrom(contacts, ms) {
   return { zones: [...contacts], first: contacts[0], last: contacts[contacts.length - 1], ms };
+}
+
+/**
+ * Can this stroke actually be produced, in the given layout and hand state?
+ *
+ * Separate from `classify`, which reports what a stroke *was*. This reports
+ * what is reachable, and the two differ once a modifier posture is held: the
+ * palm pad occupies ring and pinky, which costs the ring its sweeps but not
+ * its taps (see `whileHeld` in layout.js).
+ */
+export function performable(c, layout, { modifierHeld = false } = {}) {
+  const held = modifierHeld ? layout.whileHeld : null;
+  if (modifierHeld && !held) return false;                 // no modifier defined
+  const segs = f => layout.segments[f] || [];
+
+  switch (c.kind) {
+    case "tap":
+    case "hold":
+      return held ? held.contact.includes(c.zone) : hasZone(layout, c.zone);
+
+    case "longitudinal":
+      return segs(c.finger).length >= 2 &&
+        (held ? held.sweepFingers.includes(c.finger) : true);
+
+    case "lateral": {
+      const candidates = held ? held.sweepFingers : FINGERS;
+      return candidates.filter(f => segs(f).includes(c.level)).length >= 2;
+    }
+
+    default:
+      return false;
+  }
 }

@@ -173,7 +173,9 @@ Candidate mechanisms, cheapest first:
 
 The intended design (hold a modifier zone, act with the same hand — Raskin's self-revoking quasimode) **does not work with a single contactor.** The thumb cannot hold a modifier and act simultaneously. This rules out the safest known answer to mode error.
 
-> **Reopened 2026-08-25.** The constraint binds the *thumb*, and the palm pad of §5.5 is not closed by the thumb — it is closed by curling ring and pinky. Layout v1 adopts it (§1.1), so a true held modifier exists and prefix strokes drop to a fallback. Two consequences: the pad's holdability is completely unvalidated, and because ring and pinky flexion share tendon slips, curling the pinky brings the ring along — **`R1` and `R3` are unreachable while the modifier is held, so the shifted layer is index and middle only, six zones.**
+> **Reopened 2026-08-25.** The constraint binds the *thumb*, and the palm pad of §5.5 is not closed by the thumb — it is closed by curling ring and pinky. Layout v1 adopts it (§1.1), so a true held modifier exists and prefix strokes drop to a fallback. Two consequences: the pad's holdability is still unvalidated, and because ring and pinky flexion share tendon slips, curling the pinky brings the ring along — but only part-way. Tested by hand: with `P3` on the palm the ring is **landable but not slidable**, so `R1` and `R3` keep their taps and holds and lose their sweeps.
+
+Because extent is discarded (§2.1), the laterals survive too — an `I1→M1` produces the same command as the now-unreachable `I1→M1→R1`. **The modifier costs exactly two primitives, the ring's longitudinal pair; 26 of 28 survive.** Keep shifted bindings on the index and middle core, which behaves the same in both states.
 
 ### 5.2 Prefix strokes (the v0 answer, now the fallback)
 
