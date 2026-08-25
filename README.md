@@ -63,10 +63,20 @@ committed standalone copy has drifted from its sources.
 be run by hand from the Actions tab against any branch, which is the way to preview a deploy before
 merging.
 
-Nothing here needs a server, a framework or a database. If that changes it will be because data
-submission needs an endpoint — see `docs/` — and the answer then is a single small function, not
-a framework: `src/` is deliberately dependency-free, and a full-stack framework's main effect on
-this repo would be to make that harder to keep true.
+### Collecting results
+
+Static hosting cannot receive data, so results travel by **export-and-send**: participants download
+the JSONL or CSV and pass it on, with their written impressions in the same message. That last part
+is the reason to be in no hurry to automate it — the decision to drop the pinky came from someone
+saying it worked but didn't feel good, which no timing captured and no silent endpoint would have
+collected either.
+
+A submission endpoint waits until **after the interaction prototype exists**, deliberately. That
+prototype logs a different thing — strokes, misfires, layer abandonment (`01-vocabulary.md` §9) —
+and an endpoint built now against reach trials would be the wrong shape for it. When it is worth
+building it is one Cloudflare Worker and a table, not a platform: nothing in this project needs
+server rendering, auth or a framework, and `src/` is deliberately dependency-free — a full-stack
+framework's main effect here would be making that harder to keep true.
 
 ## Principle
 
