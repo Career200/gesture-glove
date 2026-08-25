@@ -98,6 +98,13 @@
             <option value="transition">Transition — zone-to-zone travel</option>
           </select>
         </div>
+        <div>
+          <label for="glove">Glove hand</label>
+          <select id="glove">
+            <option value="left">Left — so the right hand types</option>
+            <option value="right">Right — so the left hand types</option>
+          </select>
+        </div>
         <div id="fHand">
           <label for="hand">Hand condition</label>
           <select id="hand">
@@ -161,9 +168,23 @@ const load = () => { try { return JSON.parse(localStorage.getItem(STORE)) || [];
 const save = s => localStorage.setItem(STORE, JSON.stringify(s));
 const layout = () => LAYOUTS[$("layout").value] || LAYOUTS[DEFAULT_LAYOUT];
 
+/**
+ * Response keys. The glove is worn on one hand and the keyboard operated with
+ * the other, so a single hardcoded set is wrong for half of all participants:
+ * C and X sit under a left hand, K and M under a right one. Both sets stay live
+ * at all times — only the hint changes — so no one can be locked out by picking
+ * the wrong setting.
+ */
+const KEY_SETS = {
+  left:  { sloppy: "K", wrong: "M" },   // glove left  → right hand on the keyboard
+  right: { sloppy: "C", wrong: "X" },   // glove right → left hand on the keyboard
+};
+const SLOPPY_KEYS = ["c", "k"], WRONG_KEYS = ["x", "m"];
+const keySet = () => KEY_SETS[$("glove").value] || KEY_SETS.left;
+
 // `setup` teaches the mode before a block starts; `keys` is the one-line
 // reminder shown under the prompt while it runs.
-const MODE_HELP = {
+const modeHelp = (mode) => ({
   baseline: {
     setup: `<b>Run this once, before anything else.</b> Your thumb does not move in this
       mode at all — it measures how long you take to <em>see a prompt and press a key</em>,
@@ -187,7 +208,7 @@ const MODE_HELP = {
       </ol>
       Returning to neutral every time is what makes the trials comparable — the times are
       only meaningful if every reach starts from the same place.`,
-    keys: `<kbd>Space</kbd> landed cleanly · <kbd>C</kbd> got there but hunted or corrected · <kbd>X</kbd> landed on the wrong zone · <kbd>Esc</kbd> aborts`,
+    keys: `<kbd>Space</kbd> landed cleanly · <kbd>${keySet().sloppy}</kbd> got there but hunted or corrected · <kbd>${keySet().wrong}</kbd> landed on the wrong zone · <kbd>Esc</kbd> aborts`,
   },
   transition: {
     setup: `One sweep per trial, timed from the moment you start moving — not from the prompt.
@@ -199,9 +220,9 @@ const MODE_HELP = {
         <li>The full sweep appears, e.g. <code>I1 → M1</code>. Sweep, and report on arrival.</li>
       </ol>
       Getting into position is deliberately untimed, so what comes out is the travel itself.`,
-    keys: `<kbd>Space</kbd> to start the clock, then <kbd>Space</kbd> on arrival · <kbd>C</kbd> if it drifted or felt imprecise · <kbd>X</kbd> if it ended somewhere else · <kbd>Esc</kbd> aborts`,
+    keys: `<kbd>Space</kbd> to start the clock, then <kbd>Space</kbd> on arrival · <kbd>${keySet().sloppy}</kbd> if it drifted or felt imprecise · <kbd>${keySet().wrong}</kbd> if it ended somewhere else · <kbd>Esc</kbd> aborts`,
   },
-};
+}[mode]);
 
 /* ---------- hand diagram ---------- */
 function handSVG(idPrefix, lay){
@@ -261,14 +282,14 @@ function startBlock(){
   const reps = Math.max(1, Math.min(12, +$("reps").value || 5));
   session = {
     id: Date.now(), mode, reps, layout: lay.id,
-    hand: $("hand").value, grip: $("grip").value,
+    glove: $("glove").value, hand: $("hand").value, grip: $("grip").value,
     startedAt: new Date().toISOString(), trials: [],
   };
   seq = buildSequence(mode, lay, reps); idx = 0;
   $("setup").style.display = "none";
   $("stage").style.display = "block";
   $("stageDiagram").innerHTML = mode === "baseline" ? "" : handSVG("s", lay);
-  $("keyhint").innerHTML = MODE_HELP[mode].keys;
+  $("keyhint").innerHTML = modeHelp(mode).keys;
   $("lastTrial").textContent = "";
   nextTrial();
 }
@@ -345,14 +366,17 @@ document.addEventListener("keydown", e=>{
   if(e.code === "Space"){
     e.preventDefault();
     if(phase === "arm") promptTransitionGo(awaiting); else record("clean");
-  } else if((k === "c" || k === "x") && phase === "go" && session.mode !== "baseline"){
-    e.preventDefault(); record(k === "c" ? "sloppy" : "wrong");
+  } else if(phase === "go" && session.mode !== "baseline" &&
+            (SLOPPY_KEYS.includes(k) || WRONG_KEYS.includes(k))){
+    e.preventDefault(); record(SLOPPY_KEYS.includes(k) ? "sloppy" : "wrong");
   }
 });
 
 /* ---------- rendering ---------- */
 const condTags = s => `<span class="tag">${s.layout || "v0"}</span><span class="tag">${s.mode}</span>` +
-  (s.mode === "baseline" ? "" : `<span class="tag">${s.hand}</span><span class="tag">${s.grip}</span>`);
+  (s.mode === "baseline" ? ""
+    : `<span class="tag">${s.glove ? s.glove + " hand" : "hand unrecorded"}</span>` +
+      `<span class="tag">${s.hand}</span><span class="tag">${s.grip}</span>`);
 
 function render(){
   const all = load(), lay = layout(), b = currentBaseline();
@@ -374,7 +398,7 @@ function render(){
   // Baseline has no hand/grip condition and a fixed trial count — hide controls
   // that would do nothing, rather than leaving them to be puzzled over.
   for (const id of ["fHand", "fGrip", "fReps"]) $(id).hidden = mode === "baseline";
-  $("modeHelp").innerHTML = MODE_HELP[mode].setup;
+  $("modeHelp").innerHTML = modeHelp(mode).setup;
   const n = buildSequence(mode, lay, Math.max(1, +$("reps").value || 5)).length;
   $("trialCount").textContent = `${n} trials · about ${Math.max(1, Math.round(n*2.4/60))} min`;
   $("diagram").innerHTML = handSVG("d", lay);
@@ -394,18 +418,18 @@ function render(){
 
   const groups = groupBy(
     all.filter(s => s.mode !== "baseline").flatMap(s => s.trials.map(t => ({ ...t, s }))),
-    t => `${t.s.layout||"v0"}|${t.s.mode}|${t.s.hand}|${t.s.grip}`
+    t => `${t.s.layout||"v0"}|${t.s.glove||"?"}|${t.s.mode}|${t.s.hand}|${t.s.grip}`
   );
 
   $("results").innerHTML = [...groups.entries()].map(([key, trials])=>{
-    const [lid, mode, hand, grip] = key.split("|");
+    const [lid, glove, mode, hand, grip] = key.split("|");
     const { rows } = summarise(trials, {
       baseline: b, keyOf: t => mode === "transition" ? `${t.from}→${t.to}` : t.target,
     });
     const max = Math.max(...rows.map(r => r.median ?? 0), 1);
     return `
       <div style="margin-bottom:26px">
-        <div style="margin-bottom:10px">${condTags({layout:lid, mode, hand, grip})}</div>
+        <div style="margin-bottom:10px">${condTags({layout:lid, glove: glove === "?" ? "" : glove, mode, hand, grip})}</div>
         <table>
           <thead><tr>
             <th>${mode === "transition" ? "Transition" : "Zone"}</th>
@@ -445,22 +469,23 @@ $("exportJsonl").onclick = ()=>{
   // get concatenated, and a stale layout is invisible once that happens.
   const build = VERSION.commit.slice(0, 7);
   const lines = load().flatMap(s => s.trials.map(t => JSON.stringify({
-    session: s.id, build, layout: s.layout, mode: s.mode, hand: s.hand, grip: s.grip, ...t
+    session: s.id, build, layout: s.layout, glove: s.glove || null,
+    mode: s.mode, hand: s.hand, grip: s.grip, ...t
   })));
   download(`reach-trials-${Date.now()}.jsonl`, lines.join("\n") + "\n", "application/x-ndjson");
 };
 $("exportCsv").onclick = ()=>{
   const b = currentBaseline();
   const out = [`# baseline_ms=${b ?? "unmeasured"} build=${VERSION.commit.slice(0,7)}`,
-    "layout,mode,hand,grip,target,reach_ms,raw_ms,p25_ms,p75_ms,sloppy_rate,wrong_rate,n,ratio,tier"];
+    "layout,glove,mode,hand,grip,target,reach_ms,raw_ms,p25_ms,p75_ms,sloppy_rate,wrong_rate,n,ratio,tier"];
   const groups = groupBy(
     load().filter(s => s.mode !== "baseline").flatMap(s => s.trials.map(t => ({ ...t, s }))),
-    t => `${t.s.layout||"v0"}|${t.s.mode}|${t.s.hand}|${t.s.grip}`
+    t => `${t.s.layout||"v0"}|${t.s.glove||"?"}|${t.s.mode}|${t.s.hand}|${t.s.grip}`
   );
   for(const [key, trials] of groups){
-    const [lid, mode, hand, grip] = key.split("|");
+    const [lid, glove, mode, hand, grip] = key.split("|");
     summarise(trials, { baseline: b, keyOf: t => mode === "transition" ? `${t.from}→${t.to}` : t.target })
-      .rows.forEach(r => out.push([lid,mode,hand,grip,r.key,r.median??"",r.raw??"",r.p25??"",r.p75??"",
+      .rows.forEach(r => out.push([lid,glove,mode,hand,grip,r.key,r.median??"",r.raw??"",r.p25??"",r.p75??"",
         r.sloppyRate.toFixed(3),r.wrongRate.toFixed(3),r.n,r.ratio?r.ratio.toFixed(3):"",r.tier??""].join(",")));
   }
   download(`reach-summary-${Date.now()}.csv`, out.join("\n") + "\n", "text/csv");
@@ -470,6 +495,6 @@ $("clear").onclick = ()=>{ if(confirm("Delete all recorded blocks?")){ save([]);
 $("layout").innerHTML = Object.values(LAYOUTS).map(l =>
   `<option value="${l.id}"${l.id===DEFAULT_LAYOUT?" selected":""}>${l.name}</option>`).join("");
 $("start").onclick = startBlock;
-["mode","reps","layout"].forEach(id => $(id).addEventListener("input", render));
+["mode","reps","layout","glove"].forEach(id => $(id).addEventListener("input", render));
 render();
 </script>

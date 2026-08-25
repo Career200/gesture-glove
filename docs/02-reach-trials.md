@@ -26,11 +26,13 @@ None of this needs hardware, a recognizer, or a binding layer. It needs a stopwa
 
 ## 2. Setup
 
+**Set the glove hand first.** It selects the response keys and is stored with every block. Trials from a left hand and a right hand are separate datasets, and the tool keeps them apart.
+
 **Mark the hand.** One pen dot per phalanx, centred between the creases — twelve dots, matching the `<finger><segment>` notation. Ink on skin is a fair stand-in here: the trial measures whether the thumb can *travel to and land on* a location, and the knuckle creases (the actual landmarks, per §1.1) are present either way.
 
 **Define neutral.** Hand relaxed, thumb resting alongside the index, touching no zone. The thumb returns to neutral between every trial. Without a fixed origin, travel distance varies per trial and the timings mean nothing.
 
-**Non-glove hand on the keyboard.** <kbd>Space</kbd> when the thumb lands cleanly, <kbd>C</kbd> if you got there but had to hunt or drifted, <kbd>X</kbd> if you landed on the wrong zone.
+**Non-glove hand on the keyboard.** <kbd>Space</kbd> when the thumb lands cleanly, <kbd>K</kbd> if you got there but had to hunt or drifted, <kbd>M</kbd> if you landed on the wrong zone — those fall under a right hand, which is the one free when the glove is on the left. With the glove on the right, <kbd>C</kbd> and <kbd>X</kbd> are the equivalents. Both sets are always live; the *Glove hand* setting only decides which pair is shown, and it is recorded with the results because left and right hands cannot be pooled.
 
 **Where the clock runs.** In a reach trial it runs from the zone appearing to the keypress, so the thumb is travelling under time. In a transition trial getting into the starting position is untimed — a first <kbd>Space</kbd> starts the clock once the thumb is settled, and a second stops it on arrival — so what comes out is the sweep itself rather than the sweep plus its setup. The middle key matters more than it looks: sweeps almost never land *wrong*, they land *approximately*, and that distinction is what set the grammar (§6 of the findings).
 
