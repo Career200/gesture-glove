@@ -6,7 +6,7 @@
 
 ### 1.1 Zones
 
-Four fingers, three contact zones each, aligned to the **phalanges** — not arbitrary thirds. This matters: the knuckle creases are hard tactile landmarks, which is the entire reason the layout can work eyes-free.
+Four fingers, three contact zones each, aligned to the **phalanges** — not arbitrary thirds. Each zone sits on the palmar surface of a phalanx, between the digital flexion creases. This matters: those creases are hard tactile landmarks, which is the entire reason the layout can work eyes-free.
 
 |              | proximal (1) | middle (2) | distal (3) |
 | ------------ | ------------ | ---------- | ---------- |

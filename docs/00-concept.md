@@ -8,7 +8,7 @@ Status: **design exploration.** No hardware exists, no interaction model has bee
 
 A small, silent, eyes-free input layer worn on the hand. A thin skin-tight glove; the thumb is the controller; each of the other four fingers carries three conductive contact zones — twelve in total. The thumb touching a zone produces a discrete signal; a continuous movement across several zones produces a compound one.
 
-The zones sit on the knuckle creases rather than on arbitrary thirds. Those creases are unambiguous tactile landmarks, which is the entire reason the layout can be operated without looking. It is the one piece of the physical design that should be treated as settled.
+The zones sit on the palmar surface of each phalanx, bounded by the digital flexion creases, rather than on arbitrary thirds. Those creases are unambiguous tactile landmarks, which is the entire reason the layout can be operated without looking. It is the one piece of the physical design that should be treated as settled.
 
 ---
 

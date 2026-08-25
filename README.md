@@ -4,7 +4,7 @@
 
 ---
 
-A thin glove. The thumb is the controller. Each of the other four fingers carries three contact zones, sitting on the knuckle creases — twelve zones, all findable by feel. Touching a zone is a signal; sliding across several in one continuous touch is a compound one.
+A thin glove. The thumb is the controller. Each of the other four fingers carries three contact zones, one per phalanx on the palmar surface — twelve zones, all findable by feel. Touching a zone is a signal; sliding across several in one continuous touch is a compound one.
 
 The bet is that a very small physical vocabulary, made contextual and layered, can carry a large command set — without a screen, without a sound, and without a large gesture anyone else can see.
 
