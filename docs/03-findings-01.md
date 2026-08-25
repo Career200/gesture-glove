@@ -1,6 +1,8 @@
 # Findings 01 — first reach trials
 
-Run 2026-08-25, right hand, single subject. Raw data in `data/2026-08-25-*`.
+Run 2026-08-25, **left hand**, single subject. Raw data in `data/2026-08-25-*`.
+
+The hand was not recorded by the tool at the time and was initially written up as the right one. It records it now, on every block.
 
 | Block | Condition | n |
 | --- | --- | --- |

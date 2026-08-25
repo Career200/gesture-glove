@@ -19,6 +19,8 @@ Numbering increases toward the fingertip. Notation is always `<finger><segment>`
 
 The **thumb is the sole contactor.** It carries no zones of its own.
 
+**The left hand is the default** — it is what has been measured, and what the trainer assumes. Nothing in the notation depends on that: zones are named by finger and segment, longitudinal directions are toward the fingertip or the palm, and lateral directions are toward the pinky or the index. All of it is anatomical rather than spatial, so a right-hand glove mirrors without a single relabelling. Only reach costs need re-measuring, and only because hands differ from each other, not because of which side they are on.
+
 #### Decided — 2026-08-25, from measurement
 
 Both theories were tested; see [`03-findings-01.md`](03-findings-01.md).
