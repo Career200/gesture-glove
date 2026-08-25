@@ -1,0 +1,630 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Gesture Glove — Reach Trials</title>
+<!-- GENERATED FILE. Source: tools/reach-trials.html + src/*.js -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='88'>%F0%9F%A4%9A</text></svg>">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root{
+    --bg:#0e1013; --panel:#161a20; --line:#252b34; --fg:#e6e9ee; --dim:#8b93a1;
+    --accent:#5ac8fa; --good:#4ade80; --warn:#fbbf24; --bad:#f87171;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+  header{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  h1{font-size:17px;margin:0;font-weight:600;letter-spacing:.2px}
+  header .sub{color:var(--dim);font-size:13px}
+  main{max-width:1080px;margin:0 auto;padding:24px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;margin-bottom:18px}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--dim);margin:0 0 14px;font-weight:600}
+  label{display:block;margin:10px 0 4px;font-size:13px;color:var(--dim)}
+  select,input[type=number]{background:#0b0d10;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;font:inherit;min-width:200px}
+  .row{display:flex;gap:26px;flex-wrap:wrap}
+  button{background:var(--accent);color:#06222e;border:0;border-radius:7px;padding:10px 18px;font:600 14px/1 inherit;cursor:pointer}
+  button.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+  kbd{font:600 12px/1 var(--mono);background:#0b0d10;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:3px 6px;color:var(--fg)}
+  .hint{color:var(--dim);font-size:13px}
+  .banner{border-left:3px solid var(--warn);background:#1d1a12;padding:10px 14px;border-radius:0 7px 7px 0;font-size:13px;margin:0 0 16px}
+  .banner.ok{border-color:var(--good);background:#111c15}
+  #stage{display:none;text-align:center;padding:44px 20px 34px}
+  #target{font:700 92px/1 var(--mono);letter-spacing:.04em;margin:6px 0 2px}
+  #target.wait{color:var(--dim);font-size:34px;font-weight:600;letter-spacing:0}
+  #targetName{color:var(--dim);font-size:15px;min-height:22px}
+  #progress{height:4px;background:var(--line);border-radius:2px;margin:26px auto 0;max-width:560px;overflow:hidden}
+  #progressFill{height:100%;background:var(--accent);width:0;transition:width .12s linear}
+  #counter{color:var(--dim);font:13px/1 var(--mono);margin-top:10px}
+  #lastTrial{margin-top:16px;font:13px/1 var(--mono);color:var(--dim);min-height:16px}
+  #keyhint{margin-top:22px;font-size:12px;color:var(--dim)}
+  svg{display:block;margin:0 auto}
+  .z{fill:#1c222b;stroke:#2b323d;stroke-width:1.5;transition:fill .1s}
+  .z.off{fill:#12161c;stroke:#1e242c;stroke-dasharray:3 3}
+  .z.on{fill:var(--accent);stroke:var(--accent)}
+  .z.from{fill:#2f4a55;stroke:var(--accent)}
+  .zt{fill:#6b7482;font:600 10px var(--mono);text-anchor:middle;dominant-baseline:middle;pointer-events:none}
+  .zt.off{fill:#333a44}
+  .z.on + .zt,.z.from + .zt{fill:#06222e}
+  .palm{fill:#141922;stroke:#2b323d;stroke-width:1.5}
+  .stub{fill:#141922;stroke:none}
+  .pad{fill:#1f2a33;stroke:var(--accent);stroke-width:1.5;stroke-dasharray:4 3}
+  .padt{fill:var(--accent);font:600 10px var(--mono);text-anchor:middle;dominant-baseline:middle}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{text-align:right;padding:6px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--dim);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+  th:first-child,td:first-child{text-align:left}
+  td.z{font:600 13px var(--mono);color:var(--fg);background:none;border:0;border-bottom:1px solid var(--line)}
+  .bar{height:8px;background:var(--accent);border-radius:4px;display:inline-block;vertical-align:middle}
+  .flag{color:var(--bad);font-size:12px}
+  .warnflag{color:var(--warn);font-size:12px}
+  .t1{color:var(--good)}.t2{color:#a3e635}.t3{color:var(--warn)}.t4{color:#fb923c}.t5{color:var(--bad)}
+  .sess{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .sess .meta{color:var(--dim);font:12px/1.4 var(--mono)}
+  .tag{display:inline-block;background:#0b0d10;border:1px solid var(--line);border-radius:4px;padding:2px 7px;font:11px/1.5 var(--mono);color:var(--dim);margin-right:5px}
+</style>
+
+<header>
+  <h1>Gesture Glove · Reach Trials</h1>
+  <span class="sub">measures thumb reach cost and zone findability — see <code>docs/02-reach-trials.md</code></span>
+</header>
+
+<main>
+  <div id="setup">
+    <div id="baselineBanner"></div>
+
+    <div class="panel">
+      <h2>Before you start</h2>
+      <p class="hint" style="margin-top:0">
+        Mark the zones on your hand with a pen — one dot per phalanx, centred between the creases.
+        Between every trial return the thumb to <b>neutral</b>: hand relaxed, thumb resting alongside the index, touching nothing.
+      </p>
+      <div id="diagram"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Block setup</h2>
+      <div class="row">
+        <div>
+          <label for="layout">Layout</label>
+          <select id="layout"></select>
+        </div>
+        <div>
+          <label for="mode">Mode</label>
+          <select id="mode">
+            <option value="baseline">Baseline — calibrate the overhead (run first)</option>
+            <option value="reach">Reach — single zone targets</option>
+            <option value="transition">Transition — zone-to-zone travel</option>
+          </select>
+        </div>
+        <div>
+          <label for="hand">Hand condition</label>
+          <select id="hand">
+            <option value="hidden">Hand hidden — eyes-free</option>
+            <option value="visible">Hand visible</option>
+          </select>
+        </div>
+        <div>
+          <label for="grip">Grip condition</label>
+          <select id="grip">
+            <option value="free">Free hand</option>
+            <option value="gripping">Gripping an object</option>
+          </select>
+        </div>
+        <div>
+          <label for="reps">Reps per target</label>
+          <input id="reps" type="number" min="1" max="12" value="5">
+        </div>
+      </div>
+      <p class="hint" id="modeHelp" style="margin-bottom:0"></p>
+      <p style="margin:16px 0 0"><button id="start">Start block</button> <span class="hint" id="trialCount"></span></p>
+    </div>
+
+    <div class="panel" id="sessionsPanel" hidden>
+      <h2>Recorded blocks</h2>
+      <div id="sessions"></div>
+      <p style="margin:16px 0 0;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="ghost" id="exportJsonl">Export JSONL (raw trials)</button>
+        <button class="ghost" id="exportCsv">Export CSV (per-target summary)</button>
+        <button class="ghost" id="clear">Clear all</button>
+      </p>
+    </div>
+
+    <div class="panel" id="resultsPanel" hidden>
+      <h2>Results</h2>
+      <div id="results"></div>
+    </div>
+  </div>
+
+  <div id="stage" class="panel">
+    <div id="target" class="wait">ready</div>
+    <div id="targetName"></div>
+    <div id="stageDiagram" style="margin-top:20px"></div>
+    <div id="progress"><div id="progressFill"></div></div>
+    <div id="counter"></div>
+    <div id="lastTrial"></div>
+    <div id="keyhint"></div>
+  </div>
+</main>
+
+<script>
+/* --- inlined from src/ by tools/build-standalone.mjs — edit the modules, not this file --- */
+
+/**
+ * Zone layout — the single source of truth for which contacts exist.
+ *
+ * L0 of the architecture in 00-concept.md §4. The trainer and the interaction
+ * prototype both import this; nothing else may hard-code a zone list.
+ */
+const FINGERS = ["I", "M", "R", "P"];
+const FINGER_NAME = { I: "index", M: "middle", R: "ring", P: "pinky" };
+const SEGMENT_NAME = { 1: "proximal", 2: "middle", 3: "distal" };
+const fingerIndex = z => FINGERS.indexOf(z[0]);
+const segment = z => +z[1];
+const zoneName = z => `${FINGER_NAME[z[0]]} ${SEGMENT_NAME[z[1]]}`;
+
+/**
+ * A layout names its zones and whether a palm pad exists. The palm pad is not
+ * a thumb target: it is closed by curling ring and pinky inward, which makes it
+ * the only contact that can be *held* while the thumb acts elsewhere.
+ */
+const LAYOUTS = {
+  v0: {
+    id: "v0",
+    name: "v0 — 12 zones, three per finger",
+    note: "The original sketch. Measured 2026-08-25; see docs/03-findings-01.md.",
+    segments: { I: [1, 2, 3], M: [1, 2, 3], R: [1, 2, 3], P: [1, 2, 3] },
+    palmPad: false,
+  },
+  v1: {
+    id: "v1",
+    name: "v1 — 8 zones + palm modifier",
+    note: "Middle segments dropped where they proved unfindable; pinky reassigned to the palm pad.",
+    segments: { I: [1, 2, 3], M: [1, 2, 3], R: [1, 3], P: [] },
+    palmPad: true,
+    /**
+     * What survives while the palm pad is held, measured by hand 2026-08-25.
+     *
+     * Curling the pinky to the pad brings the ring with it, but not far enough
+     * to bury it: the ring stays *landable* and stops being *slidable*. So the
+     * modifier does not shrink the zone set — it removes a primitive class from
+     * one finger. Contact and travel have to be modelled separately because of
+     * this; a single "available zones" list cannot express it.
+     */
+    whileHeld: {
+      name: "palm pad held (ring and pinky curled)",
+      contact: ["I1", "I2", "I3", "M1", "M2", "M3", "R1", "R3"],
+      sweepFingers: ["I", "M"],
+    },
+  },
+};
+const DEFAULT_LAYOUT = "v1";
+
+/** Every thumb-reachable zone in a layout, ordered index→pinky, proximal→distal. */
+function zonesOf(layout) {
+  return FINGERS.flatMap(f => (layout.segments[f] || []).map(s => f + s));
+}
+
+/** Does the layout contain this zone? */
+const hasZone = (layout, z) => (layout.segments[z[0]] || []).includes(segment(z));
+
+/**
+ * Transition pairs worth timing, derived from the layout: every within-finger
+ * sweep, and every same-level lateral between adjacent fingers plus the full
+ * span at that level. Both directions throughout.
+ */
+function pairsOf(layout) {
+  const pairs = [];
+  const push = (from, to, note) => pairs.push({ from, to, note });
+
+  for (const f of FINGERS) {
+    const segs = layout.segments[f] || [];
+    if (segs.length >= 2) {
+      const lo = f + segs[0], hi = f + segs[segs.length - 1];
+      push(lo, hi, `longitudinal ${FINGER_NAME[f]}, outward`);
+      push(hi, lo, `longitudinal ${FINGER_NAME[f]}, inward`);
+    }
+  }
+
+  for (const level of [1, 2, 3]) {
+    const present = FINGERS.filter(f => (layout.segments[f] || []).includes(level));
+    for (let i = 0; i + 1 < present.length; i++) {
+      const a = present[i] + level, b = present[i + 1] + level;
+      push(a, b, `lateral L${level}, adjacent, toward pinky`);
+      push(b, a, `lateral L${level}, adjacent, toward index`);
+    }
+    if (present.length > 2) {
+      const a = present[0] + level, b = present[present.length - 1] + level;
+      push(a, b, `lateral L${level}, ${present.length - 1} across, toward pinky`);
+      push(b, a, `lateral L${level}, ${present.length - 1} across, toward index`);
+    }
+  }
+  return pairs;
+}
+
+/**
+ * The v0 block that has already been run once, kept verbatim so a re-run stays
+ * comparable with data/2026-08-25-*. Each pair names the §3 claim it tests.
+ */
+const V0_LEGACY_PAIRS = [
+  { from: "I1", to: "P1", note: "lateral L1 full sweep (claimed cheapest motion available)" },
+  { from: "P1", to: "I1", note: "lateral L1 full sweep, inward" },
+  { from: "I1", to: "M1", note: "lateral L1 short" },
+  { from: "I1", to: "R1", note: "lateral L1 medium" },
+  { from: "I2", to: "P2", note: "lateral L2 full sweep" },
+  { from: "P2", to: "I2", note: "lateral L2 full sweep, inward" },
+  { from: "I3", to: "M3", note: "lateral L3 short (claimed trivial)" },
+  { from: "I3", to: "R3", note: "lateral L3 medium (claimed unreliable)" },
+  { from: "I1", to: "I3", note: "longitudinal index, outward" },
+  { from: "I3", to: "I1", note: "longitudinal index, inward" },
+  { from: "M1", to: "M3", note: "longitudinal middle, outward" },
+  { from: "R1", to: "R3", note: "longitudinal ring" },
+  { from: "P1", to: "P3", note: "longitudinal pinky (claimed awkward)" },
+];
+
+
+/**
+ * Trial statistics, with the correction the first run showed to be necessary.
+ *
+ * Raw trial time is `reach + reaction + keypress`. That overhead is constant
+ * across targets, so it does not reorder anything — but it compresses ratios
+ * badly. The 2026-08-25 run spanned 745–988 ms, a 1.33× spread, of which an
+ * unknown but large majority was overhead. Subtracting a measured baseline
+ * (a block where the target is shown and the key pressed with no movement)
+ * recovers the reach time itself.
+ */
+const median = a => {
+  if (!a.length) return null;
+  const s = [...a].sort((x, y) => x - y), m = s.length >> 1;
+  return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2);
+};
+const quantile = (a, q) => {
+  if (!a.length) return null;
+  const s = [...a].sort((x, y) => x - y);
+  return s[Math.min(s.length - 1, Math.floor(q * s.length))];
+};
+
+/** Trial outcomes. `sloppy` is a hit that needed hunting or correcting. */
+const OUTCOMES = ["clean", "sloppy", "wrong"];
+
+/**
+ * Pool trials by target and summarise. `baseline` (ms) is subtracted from every
+ * median before ratios and tiers are computed; pass null to report raw times.
+ */
+function summarise(trials, { baseline = null, keyOf = t => t.target } = {}) {
+  const by = new Map();
+  for (const t of trials) {
+    const key = keyOf(t);
+    if (!by.has(key)) by.set(key, { key, note: t.note, times: [], n: 0, sloppy: 0, wrong: 0 });
+    const e = by.get(key);
+    e.n++;
+    // A wrong landing has no meaningful reach time; a sloppy one does.
+    if (t.outcome === "wrong" || t.miss === true) e.wrong++;
+    else { e.times.push(t.ms); if (t.outcome === "sloppy") e.sloppy++; }
+  }
+
+  const rows = [...by.values()].map(e => {
+    const raw = median(e.times);
+    return {
+      ...e,
+      raw,
+      median: raw === null ? null : (baseline === null ? raw : Math.max(1, raw - baseline)),
+      p25: quantile(e.times, 0.25),
+      p75: quantile(e.times, 0.75),
+      wrongRate: e.n ? e.wrong / e.n : 0,
+      sloppyRate: e.n ? e.sloppy / e.n : 0,
+      // What the hand actually cares about: anything that was not a clean hit.
+      errorRate: e.n ? (e.wrong + e.sloppy) / e.n : 0,
+    };
+  });
+
+  rows.sort((a, b) => (a.median ?? Infinity) - (b.median ?? Infinity));
+  const best = rows.find(r => r.median !== null)?.median ?? null;
+  for (const r of rows) {
+    r.ratio = best && r.median !== null ? r.median / best : null;
+    r.tier = r.ratio === null ? null
+      : r.ratio <= 1.15 ? 1 : r.ratio <= 1.40 ? 2 : r.ratio <= 1.75 ? 3 : r.ratio <= 2.20 ? 4 : 5;
+  }
+  return { rows, best, baseline };
+}
+
+/** Group trials by whatever dimensions a caller cares about. */
+function groupBy(items, keyFn) {
+  const g = new Map();
+  for (const it of items) {
+    const k = keyFn(it);
+    if (!g.has(k)) g.set(k, []);
+    g.get(k).push(it);
+  }
+  return g;
+}
+
+
+/**
+ * Stamped at deploy time by .github/workflows/pages.yml so that any trial data
+ * exported from the hosted trainer can be traced back to the exact layout and
+ * classifier it was recorded against. Stays "dev" for local runs.
+ */
+const VERSION = { commit: "dev", built: null };
+
+/* --- end inlined --- */
+
+
+
+const STORE = "gg.reach.sessions.v2";
+const BASELINE_N = 15;
+const $ = id => document.getElementById(id);
+const load = () => { try { return JSON.parse(localStorage.getItem(STORE)) || []; } catch { return []; } };
+const save = s => localStorage.setItem(STORE, JSON.stringify(s));
+const layout = () => LAYOUTS[$("layout").value] || LAYOUTS[DEFAULT_LAYOUT];
+
+const MODE_HELP = {
+  baseline: `Do not move the thumb at all. The target appears, you press <kbd>Space</kbd> as fast as you can from wherever your thumb already is. This measures reaction time plus keypress — the overhead sitting on top of every other trial — so it can be subtracted out. ${BASELINE_N} trials, under a minute.`,
+  reach: `<kbd>Space</kbd> the instant the thumb lands cleanly · <kbd>C</kbd> if you got there but had to hunt or correct · <kbd>X</kbd> if you landed on the wrong zone · <kbd>Esc</kbd> aborts.`,
+  transition: `Place the thumb on the first zone, <kbd>Space</kbd> to begin, then sweep and <kbd>Space</kbd> on arrival · <kbd>C</kbd> if the sweep drifted or felt imprecise · <kbd>X</kbd> if it ended somewhere else entirely.`,
+};
+
+/* ---------- hand diagram ---------- */
+function handSVG(idPrefix, lay){
+  const base = { I:182, M:170, R:176, P:192 }, X0 = 60, DX = 52, W = 46, H = 46, GAP = 6;
+  let s = `<svg viewBox="0 0 330 268" width="330" height="268" aria-hidden="true">`;
+  s += `<path class="palm" d="M52 196 q-26 4 -32 30 q-4 26 20 30 q22 4 32 -18 z"/>`;
+  s += `<text class="zt" x="34" y="230" style="font-size:9px">thumb</text>`;
+  s += `<rect class="palm" x="52" y="198" width="218" height="60" rx="16"/>`;
+  if(lay.palmPad){
+    s += `<rect class="pad" id="${idPrefix}-PALM" x="150" y="210" width="104" height="36" rx="9"/>`;
+    s += `<text class="padt" x="202" y="229">palm pad</text>`;
+  }
+  FINGERS.forEach((f,ci)=>{
+    const x = X0 + ci*DX;
+    s += `<rect class="stub" x="${x}" y="${base[f]}" width="${W}" height="${214-base[f]}" rx="7"/>`;
+    for(let seg=1; seg<=3; seg++){
+      const z = f+seg, y = base[f] - seg*(H+GAP), on = hasZone(lay, z);
+      s += `<rect class="z${on?"":" off"}" id="${idPrefix}-${z}" x="${x}" y="${y}" width="${W}" height="${H}" rx="9"/>`;
+      s += `<text class="zt${on?"":" off"}" x="${x+W/2}" y="${y+H/2+1}">${z}</text>`;
+    }
+  });
+  return s + `</svg>`;
+}
+function paint(prefix, on, from){
+  FINGERS.forEach(f => [1,2,3].forEach(seg=>{
+    const el = $(`${prefix}-${f}${seg}`); if(!el) return;
+    el.classList.toggle("on", f+seg === on);
+    el.classList.toggle("from", f+seg === from);
+  }));
+}
+
+/* ---------- baseline ---------- */
+function currentBaseline(){
+  const t = load().filter(s => s.mode === "baseline").flatMap(s => s.trials);
+  return t.length ? median(t.filter(x => x.outcome !== "wrong").map(x => x.ms)) : null;
+}
+
+/* ---------- sequence ---------- */
+const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+function targetsFor(mode, lay){
+  if(mode === "baseline") return Array.from({length: BASELINE_N}, () => ({ target: "—" }));
+  if(mode === "reach") return zonesOf(lay).map(z => ({ target: z }));
+  return (lay.id === "v0" ? V0_LEGACY_PAIRS : pairsOf(lay)).map(p => ({ ...p }));
+}
+function buildSequence(mode, lay, reps){
+  if(mode === "baseline") return targetsFor(mode, lay);
+  const seq = [];
+  for(let r=0;r<reps;r++) shuffle(targetsFor(mode, lay)).forEach(t => seq.push(t));
+  return seq;
+}
+
+/* ---------- run state ---------- */
+let session = null, seq = [], idx = 0, t0 = 0, awaiting = null, gapTimer = null, phase = null;
+
+function startBlock(){
+  const mode = $("mode").value, lay = layout();
+  const reps = Math.max(1, Math.min(12, +$("reps").value || 5));
+  session = {
+    id: Date.now(), mode, reps, layout: lay.id,
+    hand: $("hand").value, grip: $("grip").value,
+    startedAt: new Date().toISOString(), trials: [],
+  };
+  seq = buildSequence(mode, lay, reps); idx = 0;
+  $("setup").style.display = "none";
+  $("stage").style.display = "block";
+  $("stageDiagram").innerHTML = mode === "baseline" ? "" : handSVG("s", lay);
+  $("keyhint").innerHTML = MODE_HELP[mode];
+  $("lastTrial").textContent = "";
+  nextTrial();
+}
+
+function nextTrial(){
+  if(idx >= seq.length) return finishBlock();
+  const t = seq[idx];
+  awaiting = null; phase = null;
+  paint("s", null, null);
+  $("target").className = "wait";
+  $("target").textContent = session.mode === "baseline" ? "wait" : "neutral";
+  $("targetName").textContent = session.mode === "baseline"
+    ? "do not move — press the moment the prompt changes"
+    : "thumb resting alongside the index, touching nothing";
+  $("counter").textContent = `${idx+1} / ${seq.length}`;
+  $("progressFill").style.width = `${(idx/seq.length)*100}%`;
+  clearTimeout(gapTimer);
+  gapTimer = setTimeout(()=>{
+    if(session.mode === "transition") promptTransitionStart(t); else promptSingle(t);
+  }, 450 + Math.random()*750);
+}
+
+function promptSingle(t){
+  $("target").className = "";
+  $("target").textContent = session.mode === "baseline" ? "NOW" : t.target;
+  $("targetName").textContent = session.mode === "baseline" ? "" : zoneName(t.target);
+  if(session.mode !== "baseline") paint("s", t.target, null);
+  phase = "go"; awaiting = t;
+  requestAnimationFrame(()=> requestAnimationFrame(()=> { t0 = performance.now(); }));
+}
+function promptTransitionStart(t){
+  $("target").className = ""; $("target").textContent = t.from;
+  $("targetName").textContent = `place thumb on ${zoneName(t.from)} — Space to begin the sweep`;
+  paint("s", t.from, null);
+  phase = "arm"; awaiting = t;
+}
+function promptTransitionGo(t){
+  $("target").textContent = `${t.from} → ${t.to}`;
+  $("targetName").textContent = t.note || "";
+  paint("s", t.to, t.from);
+  phase = "go";
+  requestAnimationFrame(()=> requestAnimationFrame(()=> { t0 = performance.now(); }));
+}
+
+function record(outcome){
+  const t = awaiting, ms = Math.round(performance.now() - t0);
+  session.trials.push(session.mode === "transition"
+    ? { i: idx, from: t.from, to: t.to, note: t.note, ms, outcome, t: Date.now() }
+    : { i: idx, target: t.target, ms, outcome, t: Date.now() });
+  const label = session.mode === "transition" ? `${t.from}→${t.to}` : t.target;
+  const colour = outcome === "wrong" ? "var(--bad)" : outcome === "sloppy" ? "var(--warn)" : "var(--dim)";
+  $("lastTrial").innerHTML = `<span style="color:${colour}">${outcome}</span> · ${label} · ${ms} ms`;
+  idx++; nextTrial();
+}
+
+function finishBlock(){
+  clearTimeout(gapTimer);
+  $("progressFill").style.width = "100%";
+  if(session?.trials.length){ const all = load(); all.push(session); save(all); }
+  session = null; awaiting = null; phase = null;
+  $("stage").style.display = "none";
+  $("setup").style.display = "block";
+  render();
+}
+
+document.addEventListener("keydown", e=>{
+  if($("stage").style.display !== "block"){
+    if(e.key === "Enter" && document.activeElement?.tagName !== "BUTTON"){ e.preventDefault(); startBlock(); }
+    return;
+  }
+  if(e.key === "Escape"){ e.preventDefault(); clearTimeout(gapTimer); finishBlock(); return; }
+  if(!awaiting || !phase) return;
+  const k = e.key.toLowerCase();
+  if(e.code === "Space"){
+    e.preventDefault();
+    if(phase === "arm") promptTransitionGo(awaiting); else record("clean");
+  } else if((k === "c" || k === "x") && phase === "go" && session.mode !== "baseline"){
+    e.preventDefault(); record(k === "c" ? "sloppy" : "wrong");
+  }
+});
+
+/* ---------- rendering ---------- */
+const condTags = s => `<span class="tag">${s.layout || "v0"}</span><span class="tag">${s.mode}</span>` +
+  (s.mode === "baseline" ? "" : `<span class="tag">${s.hand}</span><span class="tag">${s.grip}</span>`);
+
+function render(){
+  const all = load(), lay = layout(), b = currentBaseline();
+
+  // A baseline carried over from another day or another keyboard is worse than
+  // none, because the subtraction silently produces nonsense. Catch it.
+  const measured = all.filter(s => s.mode !== "baseline")
+    .flatMap(s => s.trials).filter(t => t.outcome !== "wrong").map(t => t.ms);
+  const stale = b !== null && measured.length >= 10 && median(measured) <= b;
+
+  $("baselineBanner").innerHTML =
+    b === null
+      ? `<p class="banner">No baseline measured yet. Timings will be reported raw, and reaction-time overhead will swamp the differences between zones — the first run spanned only 1.33× because of this. Run a <b>baseline</b> block first.</p>`
+    : stale
+      ? `<p class="banner">Baseline <b>${b} ms</b> is at or above the median trial time, so the correction is meaningless — it is almost certainly from another session or another keyboard. Delete the baseline blocks below and measure again.</p>`
+      : `<p class="banner ok">Baseline <b>${b} ms</b> — subtracted from every median below, so the times shown are reach only.</p>`;
+
+  $("modeHelp").innerHTML = MODE_HELP[$("mode").value];
+  const n = buildSequence($("mode").value, lay, Math.max(1, +$("reps").value || 5)).length;
+  $("trialCount").textContent = `${n} trials · about ${Math.max(1, Math.round(n*2.4/60))} min`;
+  $("diagram").innerHTML = handSVG("d", lay);
+
+  $("sessionsPanel").hidden = !all.length;
+  $("resultsPanel").hidden = !all.length;
+  if(!all.length) return;
+
+  $("sessions").innerHTML = all.slice().reverse().map(s=>`
+    <div class="sess">
+      <div>${condTags(s)}<span class="meta">${s.trials.length} trials · ${new Date(s.startedAt).toLocaleString()}</span></div>
+      <button class="ghost" data-del="${s.id}" style="padding:5px 11px;font-size:12px">delete</button>
+    </div>`).join("");
+  $("sessions").querySelectorAll("[data-del]").forEach(btn => btn.onclick = ()=>{
+    save(load().filter(s => s.id !== +btn.dataset.del)); render();
+  });
+
+  const groups = groupBy(
+    all.filter(s => s.mode !== "baseline").flatMap(s => s.trials.map(t => ({ ...t, s }))),
+    t => `${t.s.layout||"v0"}|${t.s.mode}|${t.s.hand}|${t.s.grip}`
+  );
+
+  $("results").innerHTML = [...groups.entries()].map(([key, trials])=>{
+    const [lid, mode, hand, grip] = key.split("|");
+    const { rows } = summarise(trials, {
+      baseline: b, keyOf: t => mode === "transition" ? `${t.from}→${t.to}` : t.target,
+    });
+    const max = Math.max(...rows.map(r => r.median ?? 0), 1);
+    return `
+      <div style="margin-bottom:26px">
+        <div style="margin-bottom:10px">${condTags({layout:lid, mode, hand, grip})}</div>
+        <table>
+          <thead><tr>
+            <th>${mode === "transition" ? "Transition" : "Zone"}</th>
+            <th>${b === null ? "Median (raw)" : "Reach"}</th><th>IQR</th><th>vs best</th>
+            <th>Sloppy</th><th>Wrong</th><th>n</th><th>Tier</th><th style="width:26%"></th>
+          </tr></thead>
+          <tbody>${rows.map(r=>`
+            <tr>
+              <td class="z">${r.key}${r.wrongRate>=0.2?' <span class="flag">✕</span>':r.errorRate>=0.25?' <span class="warnflag">~</span>':''}</td>
+              <td>${r.median ?? "—"}</td>
+              <td style="color:var(--dim)">${r.p25 ?? "—"}–${r.p75 ?? "—"}</td>
+              <td>${r.ratio ? r.ratio.toFixed(2)+"×" : "—"}</td>
+              <td class="${r.sloppyRate>=0.2?'warnflag':''}">${Math.round(r.sloppyRate*100)}%</td>
+              <td class="${r.wrongRate>=0.2?'flag':''}">${Math.round(r.wrongRate*100)}%</td>
+              <td style="color:var(--dim)">${r.n}</td>
+              <td class="t${r.tier}">${r.tier ?? "—"}</td>
+              <td><span class="bar" style="width:${Math.round(((r.median??0)/max)*100)}%"></span></td>
+            </tr>`).join("")}</tbody>
+        </table>
+      </div>`;
+  }).join("") + `
+    <p class="hint" style="margin:0">
+      Tiers are assigned by median ratio to the fastest target (≤1.15× → 1, ≤1.40× → 2, ≤1.75× → 3, ≤2.20× → 4, above → 5).
+      <span class="flag">✕</span> marks ≥20% wrong landings; <span class="warnflag">~</span> marks ≥25% not-clean.
+      A zone that is slow but reliable is a different design problem from one you cannot find.
+    </p>`;
+}
+
+/* ---------- export ---------- */
+function download(name, text, type){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], {type}));
+  a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+$("exportJsonl").onclick = ()=>{
+  // Per-line provenance: exports from different people and different builds
+  // get concatenated, and a stale layout is invisible once that happens.
+  const build = VERSION.commit.slice(0, 7);
+  const lines = load().flatMap(s => s.trials.map(t => JSON.stringify({
+    session: s.id, build, layout: s.layout, mode: s.mode, hand: s.hand, grip: s.grip, ...t
+  })));
+  download(`reach-trials-${Date.now()}.jsonl`, lines.join("\n") + "\n", "application/x-ndjson");
+};
+$("exportCsv").onclick = ()=>{
+  const b = currentBaseline();
+  const out = [`# baseline_ms=${b ?? "unmeasured"} build=${VERSION.commit.slice(0,7)}`,
+    "layout,mode,hand,grip,target,reach_ms,raw_ms,p25_ms,p75_ms,sloppy_rate,wrong_rate,n,ratio,tier"];
+  const groups = groupBy(
+    load().filter(s => s.mode !== "baseline").flatMap(s => s.trials.map(t => ({ ...t, s }))),
+    t => `${t.s.layout||"v0"}|${t.s.mode}|${t.s.hand}|${t.s.grip}`
+  );
+  for(const [key, trials] of groups){
+    const [lid, mode, hand, grip] = key.split("|");
+    summarise(trials, { baseline: b, keyOf: t => mode === "transition" ? `${t.from}→${t.to}` : t.target })
+      .rows.forEach(r => out.push([lid,mode,hand,grip,r.key,r.median??"",r.raw??"",r.p25??"",r.p75??"",
+        r.sloppyRate.toFixed(3),r.wrongRate.toFixed(3),r.n,r.ratio?r.ratio.toFixed(3):"",r.tier??""].join(",")));
+  }
+  download(`reach-summary-${Date.now()}.csv`, out.join("\n") + "\n", "text/csv");
+};
+$("clear").onclick = ()=>{ if(confirm("Delete all recorded blocks?")){ save([]); render(); } };
+
+$("layout").innerHTML = Object.values(LAYOUTS).map(l =>
+  `<option value="${l.id}"${l.id===DEFAULT_LAYOUT?" selected":""}>${l.name}</option>`).join("");
+$("start").onclick = startBlock;
+["mode","reps","layout"].forEach(id => $(id).addEventListener("input", render));
+render();
+</script>
