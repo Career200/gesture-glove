@@ -31,6 +31,10 @@ The near-term work is a browser prototype: a simulated glove and a schematic pho
 | [`docs/02-reach-trials.md`](docs/02-reach-trials.md) | Protocol for measuring the real reach costs, and the decision rules riding on them |
 | [`docs/03-findings-01.md`](docs/03-findings-01.md) | Results of the first trials — what they overturned, and what changed because of it |
 
+[`notes/`](notes/) is scratch — open questions, hunches and half-arguments that haven't earned a
+place in `docs/` yet. Currently: who this is actually for, whether it should be a touchpad or a
+glove at all, and a list of loose ends.
+
 ## Code
 
 `src/` is the beginning of L0–L2 from [`docs/00-concept.md`](docs/00-concept.md) §4 — dependency-free ES modules with no DOM and no knowledge of what they are controlling. The trainer is their first consumer; the interaction prototype will be the second, and imports the same files rather than reimplementing them.
