@@ -1,0 +1,152 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Thumb Ring</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="A D-pad you wear: a ring on the index finger, operated by the thumb, eyes-free.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='34' fill='none' stroke='%235ac8fa' stroke-width='14'/></svg>">
+<style>
+  :root{
+    --bg:#f7f6f3; --panel:#ffffff; --line:#e2dfd8; --fg:#1c1d20; --dim:#6b6f78;
+    --accent:#0a84c6; --accent-soft:#0a84c61f;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0e1013; --panel:#161a20; --line:#252b34; --fg:#e6e9ee; --dim:#8b93a1;
+      --accent:#5ac8fa; --accent-soft:#5ac8fa24;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e1013; --panel:#161a20; --line:#252b34; --fg:#e6e9ee; --dim:#8b93a1;
+    --accent:#5ac8fa; --accent-soft:#5ac8fa24;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}
+  main{max-width:680px;margin:0 auto;padding:56px 16px 72px}
+  h1{font-size:32px;margin:0 0 4px;letter-spacing:-.3px}
+  .tagline{color:var(--dim);font-size:17px;margin:0 0 32px}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--dim);margin:48px 0 14px;font-weight:600}
+  p{margin:0 0 16px}
+  a{color:var(--accent)}
+  kbd{font:600 12px/1 var(--mono);background:var(--panel);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:3px 6px}
+
+  /* the d-pad */
+  .pad-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;margin:8px 0 8px}
+  .pad{width:240px;height:240px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;outline:none;border-radius:50%}
+  .pad:focus-visible{box-shadow:0 0 0 3px var(--accent-soft)}
+  .pad .band{fill:none;stroke:var(--line);stroke-width:26}
+  .pad .face{fill:var(--panel);stroke:var(--line);stroke-width:1.5}
+  .pad .chev{fill:none;stroke:var(--dim);stroke-width:7;stroke-linecap:round;stroke-linejoin:round;transition:stroke .12s, transform .12s}
+  .pad .dot{fill:var(--dim);transition:fill .12s}
+  .pad .on{stroke:var(--accent)}
+  .pad .dot.on{fill:var(--accent)}
+  .readout{font:600 15px/1 var(--mono);color:var(--accent);height:18px}
+  .hint{color:var(--dim);font-size:14px;text-align:center;margin:0}
+
+  /* pitches */
+  .pitches{display:grid;gap:12px}
+  .pitch{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+  .pitch h3{margin:0 0 6px;font-size:15px}
+  .pitch p{margin:0;color:var(--fg)}
+
+  /* status */
+  .steps{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+  .steps li{display:flex;gap:12px;align-items:baseline;font-size:15px;color:var(--dim)}
+  .steps b{font:600 12px/1 var(--mono);min-width:22px;text-align:right}
+  .steps .next{color:var(--fg)}
+  .steps .next b{color:var(--accent)}
+  .steps .next::after{content:"next";font:600 11px/1 var(--mono);color:var(--accent);border:1px solid var(--accent);border-radius:99px;padding:3px 7px;margin-left:auto}
+
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim);font-size:13px}
+</style>
+
+<main>
+  <h1>Thumb Ring</h1>
+  <p class="tagline">A D-pad you wear.</p>
+
+  <p>A ring on the index finger. Swipe your thumb across it in one of four directions, or tap it. That's the whole vocabulary. It pairs as an ordinary Bluetooth keyboard, so anything that understands arrow keys already understands the ring, with no app to install.</p>
+
+  <div class="pad-wrap">
+    <svg class="pad" id="pad" viewBox="0 0 240 240" tabindex="0" role="application" aria-label="Ring D-pad. Swipe, or use arrow keys and Space.">
+      <circle class="band" cx="120" cy="120" r="104"/>
+      <circle class="face" cx="120" cy="120" r="84"/>
+      <path class="chev" data-dir="up"    d="M98 72 L120 50 L142 72"/>
+      <path class="chev" data-dir="down"  d="M98 168 L120 190 L142 168"/>
+      <path class="chev" data-dir="left"  d="M72 98 L50 120 L72 142"/>
+      <path class="chev" data-dir="right" d="M168 98 L190 120 L168 142"/>
+      <circle class="dot" data-dir="tap" cx="120" cy="120" r="11"/>
+    </svg>
+    <div class="readout" id="readout" aria-live="polite"></div>
+    <p class="hint">Swipe it, or use <kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd> and <kbd>Space</kbd>.</p>
+  </div>
+
+  <h2>The pitch, three ways</h2>
+  <div class="pitches">
+    <div class="pitch">
+      <h3>What it does</h3>
+      <p>A tiny wearable directional controller: a ring worn on the finger that lets you issue discreet, eyes-free commands by moving your thumb. It's always available and needs no touchpad or screen. Essentially, a D-pad you wear.</p>
+    </div>
+    <div class="pitch">
+      <h3>What it explores</h3>
+      <p>A persistent, body-worn input method built around thumb-to-finger interaction: tactile, eyes-free control, gesture recognition, keeping accidental input out, and the smallest command vocabulary that still works across contexts and devices.</p>
+    </div>
+    <div class="pitch">
+      <h3>How it works</h3>
+      <p>An MPU-6050 motion sensor picks up the friction and micro-vibration of the thumb moving across the ring. A copper-tape contact pad gates it, so motion only counts while the thumb is on the ring. An ESP32-C3 classifies the gesture and sends a keypress over Bluetooth, for well under $15 in parts.</p>
+    </div>
+  </div>
+
+  <h2>Where it's at</h2>
+  <p>Nothing is built yet. Before any electronics, the ring has to be something you'd keep on your finger all day. So the first step is printed dummies at the real size and weight, on bendable wire bands. After that, the open question is whether a cheap motion sensor can tell four thumb swipes apart and ignore everything else a hand does.</p>
+  <ol class="steps">
+    <li class="next"><b>1</b>Wear-test dummy rings at prototype and target size</li>
+    <li><b>2</b>Bench test: a sensor on the finger, recording raw data</li>
+    <li><b>3</b>Record and label gesture traces</li>
+    <li><b>4</b>Tune the classifier offline</li>
+    <li><b>5</b>Count false fires across a normal day</li>
+    <li><b>6</b>Prototype the interaction in the browser</li>
+    <li><b>7</b>End to end: the ring as a Bluetooth keyboard</li>
+  </ol>
+
+  <footer>
+    It started as a <a href="https://github.com/Career200/gesture-glove/tree/glove-v1">gesture glove</a>, and the trials showed the useful part was the direction of a swipe, not where it landed. · <a href="https://github.com/Career200/gesture-glove">Source</a> · <span id="build">__BUILD__</span>
+  </footer>
+</main>
+
+<script>
+  const pad = document.getElementById("pad");
+  const readout = document.getElementById("readout");
+  const keys = { up: "ArrowUp", down: "ArrowDown", left: "ArrowLeft", right: "ArrowRight", tap: "Enter" };
+  let timer;
+
+  function fire(dir) {
+    pad.querySelectorAll(".on").forEach(el => el.classList.remove("on"));
+    pad.querySelector(`[data-dir="${dir}"]`).classList.add("on");
+    readout.textContent = `${dir} → sends ${keys[dir]}`;
+    clearTimeout(timer);
+    timer = setTimeout(() => pad.querySelectorAll(".on").forEach(el => el.classList.remove("on")), 380);
+  }
+
+  // A swipe is classified by its dominant axis only; how far it travelled is ignored.
+  let start = null;
+  pad.addEventListener("pointerdown", e => { start = { x: e.clientX, y: e.clientY }; pad.setPointerCapture(e.pointerId); });
+  pad.addEventListener("pointerup", e => {
+    if (!start) return;
+    const dx = e.clientX - start.x, dy = e.clientY - start.y;
+    start = null;
+    if (Math.hypot(dx, dy) < 18) return fire("tap");
+    fire(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up"));
+  });
+  pad.addEventListener("pointercancel", () => { start = null; });
+
+  const keyDirs = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", " ": "tap", Enter: "tap" };
+  document.addEventListener("keydown", e => {
+    const dir = keyDirs[e.key];
+    if (!dir) return;
+    e.preventDefault();
+    fire(dir);
+  });
+
+  const build = document.getElementById("build");
+  if (build.textContent.startsWith("__")) build.textContent = "local build";
+</script>
